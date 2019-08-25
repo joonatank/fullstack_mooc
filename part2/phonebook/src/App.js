@@ -2,18 +2,52 @@
  *  2019-08-26
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 2.6 - 2.9
+ *  Exercise 2.6 - 2.10
  */
 import React, {useState} from 'react';
+
+const Filter = ({filter, filterChangeCb}) => {
+    return (
+        <p>
+        filter shown with : <input value={filter} onChange={filterChangeCb} />
+        </p>
+    )
+}
+
+const Numbers = ({persons, filter}) => {
+    const filtered = persons.filter((x) => filter.length === 0 || x.name.includes(filter))
+    const numbers = filtered.map((obj) => <p key={obj.name}>{obj.name} {obj.number}</p>)
+
+    return (
+        <div>
+            <h2>Numbers</h2>
+            {numbers}
+        </div>
+    )
+}
+
+const NewPerson = ({name, number, handleNameChangeCb, handleNumberChangeCb, addPersonCb}) => {
+    return (
+        <div>
+            <form onSubmit={addPersonCb}>
+            <div>
+                name: <input value={name} onChange={handleNameChangeCb} />
+                <br />
+                number : <input value={number} onChange={handleNumberChangeCb} />
+            </div>
+            <div>
+                <button type="submit">add</button>
+            </div>
+            </form>
+        </div>
+    )
+}
 
 const App = () => {
     const [ persons, setPerson ] = useState([ {name: 'Arto Hellas', number: '555-5555555' } ])
     const [ newName, setNewName ] = useState('')
     const [ newNumber, setNewNumber ] = useState('')
     const [ filter, setFilter ] = useState('')
-
-    const filtered = persons.filter((x) => filter.length === 0 || x.name.includes(filter))
-    const numbers = filtered.map((obj) => <p key={obj.name}>{obj.name} {obj.number}</p>)
 
     const addPerson = (event) => {
         // disable page reload
@@ -48,23 +82,13 @@ const App = () => {
         <div>
             <h2>Phonebook</h2>
 
-            <p>
-            filter shown with : <input value={filter} onChange={handleFilterChange} />
-            </p>
+            <Filter filter={filter} filterChangeCb={handleFilterChange} />
 
-            <form onSubmit={addPerson}>
-            <div>
-                name: <input value={newName} onChange={handleNameChange} />
-                <br />
-                number : <input value={newNumber} onChange={handleNumberChange} />
-            </div>
-            <div>
-                <button type="submit">add</button>
-            </div>
-            </form>
+            <h3>Add a new</h3>
+            <NewPerson name={newName} number={newNumber} handleNameChangeCb={handleNameChange}
+                handleNumberChangeCb={handleNumberChange} addPersonCb={addPerson} />
 
-            <h2>Numbers</h2>
-            {numbers}
+            <Numbers persons={persons} filter={filter} />
         </div>
     )
 }
