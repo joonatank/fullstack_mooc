@@ -2,9 +2,10 @@
  *  2019-08-26
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 2.6 - 2.10
+ *  Exercise 2.6 - 2.11
  */
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
+import axios from 'axios'
 
 const Filter = ({filter, filterChangeCb}) => {
     return (
@@ -44,10 +45,20 @@ const NewPerson = ({name, number, handleNameChangeCb, handleNumberChangeCb, addP
 }
 
 const App = () => {
-    const [ persons, setPerson ] = useState([ {name: 'Arto Hellas', number: '555-5555555' } ])
+    const [ persons, setPerson ] = useState([])
     const [ newName, setNewName ] = useState('')
     const [ newNumber, setNewNumber ] = useState('')
     const [ filter, setFilter ] = useState('')
+
+    useEffect(() => {
+        axios
+            .get('http://localhost:3001/persons')
+            .then(resp => {
+                const people = resp.data
+                setPerson(people)
+            })
+    }, [])
+
 
     const addPerson = (event) => {
         // disable page reload
