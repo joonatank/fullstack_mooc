@@ -2,10 +2,14 @@
  *  2019-08-26
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 2.6 - 2.11
+ *  Exercise 2.6 - 2.18
+ *
+ *  TODO effect hook is run when idle
+ *      meaning that it consumes hilarious amounts of CPU time
+ *      how to make it only ran when there is a change?
  */
 import React, {useState, useEffect} from 'react';
-import axios from 'axios'
+import Server from './server'
 
 const Filter = ({filter, filterChangeCb}) => {
     return (
@@ -15,9 +19,18 @@ const Filter = ({filter, filterChangeCb}) => {
     )
 }
 
-const Numbers = ({persons, filter}) => {
+const Person = ({person, delCb}) => {
+    return (
+        <p>
+        {person.name} {person.number}
+        <button onClick={delCb.bind(this, person.id)}>delete</button>
+        </p>
+    )
+}
+
+const Numbers = ({persons, filter, delCb}) => {
     const filtered = persons.filter((x) => filter.length === 0 || x.name.includes(filter))
-    const numbers = filtered.map((obj) => <p key={obj.name}>{obj.name} {obj.number}</p>)
+    const numbers = filtered.map((obj) => <Person key={obj.name} person={obj} delCb={delCb} />)
 
     return (
         <div>
@@ -50,14 +63,14 @@ const App = () => {
     const [ newNumber, setNewNumber ] = useState('')
     const [ filter, setFilter ] = useState('')
 
+
     useEffect(() => {
-        axios
-            .get('http://localhost:3001/persons')
+        Server.getAll()
             .then(resp => {
                 const people = resp.data
                 setPerson(people)
             })
-    }, [])
+    })
 
 
     const addPerson = (event) => {
@@ -65,16 +78,19 @@ const App = () => {
         event.preventDefault()
 
         const found = persons.filter((x) => x.name === newName)
-        if (found.length !== 0)
-            alert(`${newName} already added to the Phonebook`)
-        else {
-            var copy = [...persons]
-            copy.push({name: newName, number: newNumber})
-            setPerson(copy)
+        const person = {name: newName, number: newNumber}
 
+        let promise = null
+        if (found.length !== 0) {
+            promise = Server.update(found[0].id, person)
+        }
+        else {
+            promise = Server.create(person)
+        }
+        promise.then(resp => {
             setNewName('')
             setNewNumber('')
-        }
+        })
     }
 
     const handleNameChange = (event) => {
@@ -89,6 +105,13 @@ const App = () => {
         setFilter(event.target.value)
     }
 
+    const delCb = id => {
+        const p = persons.filter(x => x.id === id)
+        if (window.confirm(`Delete ${p[0].name}?`)) {
+            Server.del(id)
+        }
+    }
+
     return (
         <div>
             <h2>Phonebook</h2>
@@ -99,7 +122,7 @@ const App = () => {
             <NewPerson name={newName} number={newNumber} handleNameChangeCb={handleNameChange}
                 handleNumberChangeCb={handleNumberChange} addPersonCb={addPerson} />
 
-            <Numbers persons={persons} filter={filter} />
+            <Numbers persons={persons} filter={filter} delCb={delCb} />
         </div>
     )
 }
