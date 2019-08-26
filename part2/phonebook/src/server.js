@@ -1,7 +1,9 @@
 import axios from 'axios'
 
 /* Backend communication */
-const URI = 'http://localhost:3001/persons'
+//const URI = 'http://localhost:3001/api/persons'
+const URI = 'https://fathomless-shore-94502.herokuapp.com/api/persons'
+
 const getAll = () => {
     return axios.get(URI)
 }
