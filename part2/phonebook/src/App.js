@@ -10,7 +10,20 @@
  */
 import React, {useState, useEffect} from 'react';
 import Server from './server'
+import './App.css'
 
+const Flash = ({msg, look}) => {
+    if (msg === null || msg === '') {
+        return null
+    }
+    else {
+        return (
+            <div className={look}>
+            {msg}
+            </div>
+        )
+    }
+}
 const Filter = ({filter, filterChangeCb}) => {
     return (
         <p>
@@ -62,6 +75,7 @@ const App = () => {
     const [ newName, setNewName ] = useState('')
     const [ newNumber, setNewNumber ] = useState('')
     const [ filter, setFilter ] = useState('')
+    const [ flash, setFlash] = useState(null)
 
 
     useEffect(() => {
@@ -81,15 +95,21 @@ const App = () => {
         const person = {name: newName, number: newNumber}
 
         let promise = null
+        let msg = ''
         if (found.length !== 0) {
             promise = Server.update(found[0].id, person)
+            msg = 'Changed'
         }
         else {
             promise = Server.create(person)
+            msg = 'Added'
         }
         promise.then(resp => {
             setNewName('')
             setNewNumber('')
+            setFlash(`${msg} person ${person.name}`)
+
+            setTimeout(() => setFlash(null), 5000)
         })
     }
 
@@ -115,6 +135,7 @@ const App = () => {
     return (
         <div>
             <h2>Phonebook</h2>
+            <Flash msg={flash} look="status"/>
 
             <Filter filter={filter} filterChangeCb={handleFilterChange} />
 
