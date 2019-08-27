@@ -7,6 +7,8 @@
  *  TODO effect hook is run when idle
  *      meaning that it consumes hilarious amounts of CPU time
  *      how to make it only ran when there is a change?
+ *
+ *  Updated to run on exercise 3.18 backend
  */
 import React, {useState, useEffect} from 'react';
 import Server from './server'
@@ -36,16 +38,15 @@ const Person = ({person, delCb}) => {
     return (
         <p>
         {person.name} {person.number}
-        <button onClick={delCb.bind(this, person.id)}>delete</button>
+        <button onClick={delCb.bind(this, person._id)}>delete</button>
         </p>
     )
 }
 
 const Numbers = ({persons, filter, delCb}) => {
     const numbers = persons
-        .map((p, i) => ({name: p.name, number: p.number, id: i}))
         .filter((x) => filter.length === 0 || x.name.includes(filter))
-        .map(obj => <Person key={obj.id} person={obj} delCb={delCb} />)
+        .map(obj => <Person key={obj._id} person={obj} delCb={delCb} />)
 
     return (
         <div>
@@ -99,7 +100,8 @@ const App = () => {
         let promise = null
         let msg = ''
         if (found.length !== 0) {
-            promise = Server.update(found[0].id, person)
+            const id = found[0]._id
+            promise = Server.update(id, person)
             msg = 'Changed'
         }
         else {
@@ -113,6 +115,7 @@ const App = () => {
 
             setTimeout(() => setFlash(null), 5000)
         })
+        .catch(error => alert(`Creation failed\n ${error}`))
     }
 
     const handleNameChange = (event) => {
@@ -128,7 +131,8 @@ const App = () => {
     }
 
     const delCb = id => {
-        const p = persons[id]
+        const found = persons.filter(x => x._id === id)
+        const p = found[0]
         console.log(`deleting ${id}`)
         if (window.confirm(`Delete ${p.name}?`)) {
             Server.del(id)
