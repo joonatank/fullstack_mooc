@@ -75,6 +75,7 @@ const App = () => {
     const [ newNumber, setNewNumber ] = useState('')
     const [ filter, setFilter ] = useState('')
     const [ flash, setFlash] = useState(null)
+    const [ errorFlash, setErrorFlash] = useState(null)
 
 
     useEffect(() => {
@@ -111,7 +112,11 @@ const App = () => {
 
             setTimeout(() => setFlash(null), 5000)
         })
-        .catch(error => alert(`Creation failed\n ${error}`))
+        .catch(error => {
+            console.log(error.response.data.error)
+            setErrorFlash(error.response.data.error)
+            setTimeout(() => setErrorFlash(null), 5000)
+        })
     }
 
     const handleNameChange = (event) => {
@@ -139,6 +144,7 @@ const App = () => {
         <div>
             <h2>Phonebook</h2>
             <Flash msg={flash} look="status"/>
+            <Flash msg={errorFlash} look="error"/>
 
             <Filter filter={filter} filterChangeCb={handleFilterChange} />
 
