@@ -42,8 +42,10 @@ const Person = ({person, delCb}) => {
 }
 
 const Numbers = ({persons, filter, delCb}) => {
-    const filtered = persons.filter((x) => filter.length === 0 || x.name.includes(filter))
-    const numbers = filtered.map((obj) => <Person key={obj.name} person={obj} delCb={delCb} />)
+    const numbers = persons
+        .map((p, i) => ({name: p.name, number: p.number, id: i}))
+        .filter((x) => filter.length === 0 || x.name.includes(filter))
+        .map(obj => <Person key={obj.id} person={obj} delCb={delCb} />)
 
     return (
         <div>
@@ -126,8 +128,9 @@ const App = () => {
     }
 
     const delCb = id => {
-        const p = persons.filter(x => x.id === id)
-        if (window.confirm(`Delete ${p[0].name}?`)) {
+        const p = persons[id]
+        console.log(`deleting ${id}`)
+        if (window.confirm(`Delete ${p.name}?`)) {
             Server.del(id)
         }
     }
