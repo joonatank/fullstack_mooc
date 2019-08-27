@@ -4,10 +4,6 @@
  *  Helsinki Fullstack Mooc
  *  Exercise 2.6 - 2.18
  *
- *  TODO effect hook is run when idle
- *      meaning that it consumes hilarious amounts of CPU time
- *      how to make it only ran when there is a change?
- *
  *  Updated to run on exercise 3.18 backend
  */
 import React, {useState, useEffect} from 'react';
@@ -87,7 +83,7 @@ const App = () => {
                 const people = resp.data
                 setPerson(people)
             })
-    })
+    }, [newName])   // not perfect but avoids sending new requests at every render
 
 
     const addPerson = (event) => {
