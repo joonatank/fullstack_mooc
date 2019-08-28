@@ -21,8 +21,9 @@ app.use(express.static('build'))
 app.use(cors())
 app.use(bodyParser.json())
 
-app.get('/api/blogs', (request, response) => {
-	blog.all().then(blogs => response.json(blogs))
+app.get('/api/blogs', async (request, response) => {
+	const blogs = await blog.all()
+    response.json(blogs)
 })
 
 app.post('/api/blogs', (request, response) => {
