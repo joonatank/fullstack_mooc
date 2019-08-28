@@ -2,7 +2,7 @@
  *  2019-08-28
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 4.8 - 4.14
+ *  Exercise 4.8 - 4.19
  */
 
 const supertest = require('supertest')
@@ -16,6 +16,11 @@ const helpers = require('./test_helpers')
 beforeEach(async () => {
     await blog.deleteAll()
     await users.deleteAll()
+})
+
+afterAll(async () => {
+    // TODO this should be in the app
+    await blog.disconnect()
 })
 
 const initialiseDB = (async (user) => {
@@ -40,8 +45,9 @@ const initialiseDB = (async (user) => {
 })
 
 // Needed for blog tests, but don't want it for user tests
+const USER_PASSWORD = 'good123'
 const createTestUser = async () => {
-    const user = { username: 'test', name: 'Felix the Magnificent', password: 'good123' }
+    const user = { username: 'test', name: 'Felix the Magnificent', password: USER_PASSWORD }
     return await users.create(user)
 }
 
@@ -86,9 +92,10 @@ describe('GET blog', () => {
             })
     })
 
-    test('if post has a user it is populated', async () => {
+    test('get a post with a user populated', async () => {
         const user = await createTestUser()
-        users.count().then(c => expect(c).toBe(1))
+        const c = await users.count()
+        expect(c).toBe(1)
 
         const newBlog = { title: 'this', author: 'that', url: 'somewhere', likes: 0 }
         await blog.save(newBlog, user._id)
@@ -106,61 +113,96 @@ describe('GET blog', () => {
 })
 
 describe('POST blog', () => {
+    const assert_post_count = async (n) => {
+        const Nb = await blog.count()
+        expect(Nb).toBe(n)
+    }
+
     test('bad post endpoint will return 404', async () => {
         await api.post('/api')
             .set('Accept', 'application/json')
             .expect(404)
 
-        // database
-        const N = await blog.count()
-        expect(N).toBe(0)
+        await assert_post_count(0)
     })
 
-    const post_blog_fail = async (newBlog) => {
+
+    const post_blog_fail = async (token, newBlog) => {
         return await api.post('/api/blogs')
             .send(newBlog)
+            .set({ 'Authorization': 'bearer '.concat(token) })
             .set('Accept', 'application/json')
             .expect(400)
             .expect('Content-Type', /json/)
     }
 
-    test('empty post will fail with 400', async () => {
-        post_blog_fail({})
+    test('post without token will fail with 401', async () => {
+        const newBlog = { title: 'this', author: 'that', url: 'somewhere', likes: 0 }
 
-        // database
-        const N = await blog.count()
-        expect(N).toBe(0)
+        await assert_post_count(0)
+
+        await api.post('/api/blogs')
+            .send(newBlog)
+            .set('Accept', 'application/json')
+            .expect(401)
+            .then(r => expect(r.body.error).toBe('token missing or invalid'))
+
+        await assert_post_count(0)
+    })
+
+    const post_login = async (opts) => {
+        return await api.post('/api/login')
+            .send({ username: opts.username, password: opts.password })
+            .set('Accept', 'application/json')
+            .expect(200)
+            .then(r => r.body.token)
+    }
+
+    // Need tokens for all the following tests
+    // have to do a login request since we don't have a Session type
+    test('empty post will fail with 400', async () => {
+        const user = await createTestUser()
+        const token = await post_login({ username: user.username, password: USER_PASSWORD })
+
+        await post_blog_fail(token, {})
+
+        await assert_post_count(0)
     })
 
     test('post without author will fail with 400', async () => {
+        const user = await createTestUser()
+        const token = await post_login({ username: user.username, password: USER_PASSWORD })
+
         const newBlog = { title: 'this', url: 'somewhere', likes: 0 }
 
-        post_blog_fail(newBlog)
+        await post_blog_fail(token, newBlog)
 
-        // database
-        const N = await blog.count()
-        expect(N).toBe(0)
+        await assert_post_count(0)
     })
 
     test('post without url will fail with 400', async () => {
+        const user = await createTestUser()
+        const token = await post_login({ username: user.username, password: USER_PASSWORD })
+
         const newBlog = { title: 'this', author: 'that', likes: 0 }
 
-        post_blog_fail(newBlog)
+        await post_blog_fail(token, newBlog)
 
-        // database
-        const N = await blog.count()
-        expect(N).toBe(0)
+        await assert_post_count(0)
     })
 
     test('one good post is found after', async () => {
+        const user = await createTestUser()
+        const token = await post_login({ username: user.username, password: USER_PASSWORD })
+
         const newBlog = { title: 'this', author: 'that', url: 'somewhere', likes: 0 }
 
-        const Nb = await blog.count()
-        expect(Nb).toBe(0)
+        await assert_post_count(0)
 
         // post
         await api.post('/api/blogs')
             .send(newBlog)
+            .set({ 'Authorization': 'bearer '.concat(token) })
             .set('Accept', 'application/json')
             .expect(201)
             .expect('Content-Type', /json/)
@@ -181,10 +223,14 @@ describe('POST blog', () => {
     })
 
     test('missing likes defaults to zero', async () => {
+        const user = await createTestUser()
+        const token = await post_login({ username: user.username, password: USER_PASSWORD })
+
         const newBlog = { title: 'this', author: 'that', url: 'somewhere' }
-        // post
+
         await api.post('/api/blogs')
             .send(newBlog)
+            .set({ 'Authorization': 'bearer '.concat(token) })
             .set('Accept', 'application/json')
             .expect(201)
 
@@ -196,23 +242,6 @@ describe('POST blog', () => {
         expect(after[0].url).toBe(newBlog.url)
         expect(after[0].likes).toBe(0)
     })
-
-    test('if we have a user then the post is linked to her', async () => {
-        const user = await createTestUser()
-        users.count().then(c => expect(c).toBe(1))
-
-        const newBlog = { title: 'this', author: 'that', url: 'somewhere', likes: 0 }
-        // post
-        await api.post('/api/blogs')
-            .send(newBlog)
-            .set('Accept', 'application/json')
-            .expect(201)
-
-        const after = await blog.all()
-        expect(after.length).toBe(1)
-        expect(after[0].user.toString()).toBe(user._id.toString())
-    })
-
 })
 
 describe('DELETE blog post', () => {
@@ -454,6 +483,3 @@ describe('get wrong endpoint', () => {
     })
 })
 
-afterAll(() => {
-    blog.disconnect()
-})

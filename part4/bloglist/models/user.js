@@ -2,7 +2,7 @@
  *  2019-08-28
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 4.1 - 4.14
+ *  Exercise 4.1 - 4.18
  */
 const mongoose = require('mongoose')
 const uniqueValidator = require('mongoose-unique-validator')
@@ -36,8 +36,11 @@ const User = mongoose.model('User', userSchema)
 
 const create = async (params) => {
     // check password legnth before hashing
+    if (!params.password) {
+        throw new mongoose.Error('User validation: password has to exist')
+    }
     if (params.password.length < 3) {
-        throw new mongoose.Error('User validation password needs to be at least 3 character')
+        throw new mongoose.Error('User validation: password needs to be at least 3 character')
     }
 
     const salt = 10
@@ -53,7 +56,7 @@ const create = async (params) => {
 }
 
 const all = () => {
-	return User.find({})
+    return User.find({})
 }
 
 const deleteAll = () => {
@@ -64,9 +67,19 @@ const count = () => {
 	return User.countDocuments().exec()
 }
 
+const find = (params) => {
+    return User.findOne(params)
+}
+
+const get = (id) => {
+    return User.findById(id)
+}
+
 module.exports = {
     create,
     count,
     all,
+    find,
+    get,
     deleteAll
 }

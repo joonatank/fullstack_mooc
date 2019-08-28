@@ -31,7 +31,7 @@ const connect = (username, password, server_url, db_name) => {
 }
 
 const disconnect = () => {
-    mongoose.connection.close()
+    return mongoose.connection.close()
 }
 
 const deleteAll = () => {

@@ -2,7 +2,7 @@
  *  2019-08-28
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 4.1 - 4.14
+ *  Exercise 4.1 - 4.19
  */
 require('dotenv').config()
 const express = require('express')
@@ -11,6 +11,9 @@ const app = express()
 const cors = require('cors')
 const blog = require('./models/blog')
 const users = require('./models/user')
+const loginRouter = require('./controllers/login')
+const jwt = require('jsonwebtoken')
+const mongoose = require('mongoose')
 
 const db_name = (process.env.NODE_ENV === 'test') ?
     process.env.TEST_DATABASE :
@@ -21,21 +24,33 @@ blog.connect(process.env.USERNAME, process.env.PASSWORD, process.env.MONGODB_URL
 app.use(express.static('build'))
 app.use(cors())
 app.use(bodyParser.json())
+app.use('/api/login', loginRouter)
+
+const getTokenFrom = req => {
+    const auth = req.get('authorization')
+    if (auth && auth.toLowerCase().startsWith('bearer')) {
+        return auth.substring(7)
+    }
+    else {
+        return null
+    }
+}
 
 app.get('/api/blogs', async (request, response) => {
 	const blogs = await blog.all().populate('user', { username: 1, name: 1 })
     response.json(blogs)
 })
 
-app.post('/api/blogs', async (request, response) => {
+app.post('/api/blogs', async (request, response, next) => {
     try {
-        const all_users = await users.all()
-        const user = (all_users.length > 0) ? all_users[0]: ''
+        const token = getTokenFrom(request)
+        const decodedToken = jwt.verify(token, process.env.SECRET)
+        const user = await users.get(decodedToken.id)
+
         const res = await blog.save(request.body, user._id)
         response.status(201).json(res)
     } catch (error) {
-        console.error(error.message)
-        response.status(400).json( {error: error.message } )
+        next(error)
     }
 })
 
@@ -66,14 +81,29 @@ app.get('/api/users', async (request, response) => {
     response.json(resp)
 })
 
-app.post('/api/users', async (request, response) => {
+app.post('/api/users', async (request, response, next) => {
     try {
         const res = await users.create(request.body)
         response.status(201).json(res)
     } catch (error) {
-        console.error(error.message)
-        response.status(400).json( {error: error.message } )
+        next(error)
     }
 })
+
+const errorHandler = (err, request, response, next) => {
+    if (err instanceof mongoose.Error) {
+        return response.status(400).json( {error: err.message } )
+    }
+    else if (err.name === 'JsonWebTokenError') {
+        return response.status(401).json( { error: 'token missing or invalid' } )
+    }
+    // something weird
+    else {
+        console.error(`Unknown error: ${err.message}`)
+
+        next(err)
+    }
+}
+app.use(errorHandler)
 
 module.exports = app
