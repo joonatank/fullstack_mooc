@@ -27,8 +27,24 @@ app.get('/api/blogs', async (request, response) => {
 })
 
 app.post('/api/blogs', async (request, response) => {
-    const res = await blog.save(request.body)
-    response.status(201).json(res)
+    try {
+        const res = await blog.save(request.body)
+        response.status(201).json(res)
+    } catch (error) {
+        console.error(error.message)
+        response.status(400).json( {error: error.message } )
+    }
+})
+
+app.delete('/api/blogs/:id', async (request, response) => {
+    try {
+        const id = request.params.id
+        const res = await blog.remove(id)
+        response.status(200).json(res)
+    } catch (error) {
+        console.error(error.message)
+        response.status(400).json( {error: error.message } )
+    }
 })
 
 module.exports = app

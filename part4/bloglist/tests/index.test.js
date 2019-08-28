@@ -16,6 +16,20 @@ beforeEach(async () => {
     await blog.deleteAll();
 })
 
+const initialiseDB = (async () => {
+    const COUNT = helpers.blogs.length
+    await Promise.all(
+        helpers.blogs
+            .map(b => blog.save(b))
+    )
+
+    // check that the database is working first
+    const b = await blog.all()
+    expect(b.length).toBe(COUNT)
+
+    return COUNT
+})
+
 describe('GET list', () => {
     test('get on empty database returns an empty list', async () => {
         await api.get('/api/blogs')
@@ -46,15 +60,7 @@ describe('GET list', () => {
     })
 
     test('get with six elements in database returns six elements', async () => {
-        const N_BLOGS = helpers.blogs.length
-        await Promise.all(
-            helpers.blogs
-                .map(b => blog.save(b))
-        )
-
-        // check that the database is working first
-        const b = await blog.all()
-        expect(b.length).toBe(N_BLOGS)
+        const N_BLOGS = await initialiseDB()
 
         // check the same with a get
         await api.get('/api/blogs')
@@ -78,23 +84,44 @@ describe('POST things', () => {
         expect(after.length).toBe(0)
     })
 
-    test('empty post will succeed', async () => {
+    test('empty post will fail with 400', async () => {
         // post
         await api.post('/api/blogs')
             .set('Accept', 'application/json')
-            .expect(201)
+            .expect(400)
             .expect('Content-Type', /json/)
-            .then(resp => {
-                expect(resp.body.id).toBeDefined()
-                expect(resp.body.title).not.toBeDefined()
-            })
 
         // database
         const after  = await blog.all()
-        expect(after.length).toBe(1)
-        expect(after[0].title).not.toBeDefined()
-        expect(after[0].author).not.toBeDefined()
-        expect(after[0].url).not.toBeDefined()
+        expect(after.length).toBe(0)
+    })
+
+    test('post without author will fail with 400', async () => {
+        const newBlog = { title: 'this', url: 'somewhere', likes: 0 }
+        // post
+        await api.post('/api/blogs')
+            .send(newBlog)
+            .set('Accept', 'application/json')
+            .expect(400)
+            .expect('Content-Type', /json/)
+
+        // database
+        const after  = await blog.all()
+        expect(after.length).toBe(0)
+    })
+
+    test('post without url will fail with 400', async () => {
+        const newBlog = { title: 'this', author: 'that', likes: 0 }
+        // post
+        await api.post('/api/blogs')
+            .send(newBlog)
+            .set('Accept', 'application/json')
+            .expect(400)
+            .expect('Content-Type', /json/)
+
+        // database
+        const after  = await blog.all()
+        expect(after.length).toBe(0)
     })
 
     test('one good post is found after', async () => {
@@ -140,6 +167,29 @@ describe('POST things', () => {
         expect(after[0].author).toBe(newBlog.author)
         expect(after[0].url).toBe(newBlog.url)
         expect(after[0].likes).toBe(0)
+    })
+})
+
+describe('DELETE blog post', () => {
+    test('delete one should succeed', async () => {
+        const COUNT = await initialiseDB()
+        const id = helpers.blogs[0]._id
+
+        await api.delete(`/api/blogs/${id}`)
+            .expect(200)
+
+        const after  = await blog.all()
+        expect(after.length).toBe(COUNT-1)
+    })
+
+    test('delete one with invalid id should fail', async () => {
+        const COUNT = await initialiseDB()
+
+        await api.delete('/api/blogs/invalid_id')
+            .expect(400)
+
+        const after  = await blog.all()
+        expect(after.length).toBe(COUNT)
     })
 })
 

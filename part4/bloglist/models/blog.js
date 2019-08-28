@@ -8,8 +8,8 @@ const mongoose = require('mongoose')
 
 const blogSchema = mongoose.Schema({
 	title: String,
-	author: String,
-	url: String,
+	author: { type: String, required: true },
+	url: { type: String, required: true },
 	likes: { type: Number, default: 0 }
 })
 
@@ -42,6 +42,11 @@ const save = (params) => {
     return blog.save()
 }
 
+const remove = (id) => {
+    return Blog.findByIdAndDelete(id).exec()
+}
+
+
 const all = () => {
 	return Blog.find({}).exec()
 }
@@ -51,5 +56,6 @@ module.exports = {
     disconnect,
     save,
     all,
+    remove,
     deleteAll
 }
