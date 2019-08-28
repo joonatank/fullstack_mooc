@@ -277,11 +277,25 @@ describe('GET users', () => {
 })
 
 describe('POST users', () => {
+    const post_user_fail = async (user) => {
+        return await api.post('/api/users')
+            .send(user)
+            .set('Accept', 'application/json')
+            .expect(400)
+            .then(resp => {
+                expect(resp.body.error).toBeDefined()
+            })
+    }
+
+    const user_database_empty = async () => {
+        const N = await users.count()
+        expect(N).toBe(0)
+    }
+
     test('post a new user succeeds', async () => {
         const user = { username: 'felix', name: 'Felix the Magnificent', password: 'good123' }
 
-        const N = await users.count()
-        expect(N).toBe(0)
+        await user_database_empty()
 
         // post
         await api.post('/api/users')
@@ -304,49 +318,64 @@ describe('POST users', () => {
     test('post a new user without username fails', async () => {
         const user = { name: 'Felix the Magnificent', password: 'good123' }
 
-        const N = await users.count()
-        expect(N).toBe(0)
+        await user_database_empty()
 
-        // post
-        await api.post('/api/users')
-            .send(user)
-            .set('Accept', 'application/json')
-            .expect(400)
+        await post_user_fail(user)
 
-        const after = await users.count()
-        expect(after).toBe(0)
+        await user_database_empty()
     })
 
     test('post a new user without name fails', async () => {
         const user = { username: 'felix', password: 'good123' }
 
-        const N = await users.count()
-        expect(N).toBe(0)
+        await user_database_empty()
 
-        // post
-        await api.post('/api/users')
-            .send(user)
-            .set('Accept', 'application/json')
-            .expect(400)
+        await post_user_fail(user)
 
-        const after = await users.count()
-        expect(after).toBe(0)
+        await user_database_empty()
     })
 
     test('post a new user without password fails', async () => {
         const user = { username: 'felix', name: 'Felix the Magnificent' }
 
+        await user_database_empty()
+
+        await post_user_fail(user)
+
+        await user_database_empty()
+    })
+
+    test('post a new user with already existing username fails', async () => {
+        const user = { username: 'felix', name: 'Felix the Magnificent', password: 'good123' }
+
+        await users.create(user)
         const N = await users.count()
-        expect(N).toBe(0)
+        expect(N).toBe(1)
 
-        // post
-        await api.post('/api/users')
-            .send(user)
-            .set('Accept', 'application/json')
-            .expect(400)
+        await post_user_fail(user)
 
-        const after = await users.count()
-        expect(after).toBe(0)
+        const Na = await users.count()
+        expect(Na).toBe(1)
+    })
+
+    test('post a new user with too short username fails', async () => {
+        const user = { username: 'fe', name: 'Felix the Magnificent', password: 'good123' }
+
+        await user_database_empty()
+
+        await post_user_fail(user)
+
+        await user_database_empty()
+    })
+
+    test('post a new user with too short password fails', async () => {
+        const user = { username: 'felix', name: 'Felix the Magnificent', password: 'ba' }
+
+        await user_database_empty()
+
+        await post_user_fail(user)
+
+        await user_database_empty()
     })
 })
 
