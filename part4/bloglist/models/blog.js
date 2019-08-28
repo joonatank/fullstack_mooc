@@ -14,12 +14,19 @@ const blogSchema = mongoose.Schema({
 })
 
 const Blog = mongoose.model('Blog', blogSchema)
-const db_name = 'bloglist'
 const params = ''
 
-const connect = (username, password, server_url) => {
+const connect = (username, password, server_url, db_name) => {
     const url = `mongodb+srv://${username}:${password}@${server_url}/${db_name}?${params}`
     mongoose.connect(url, { useNewUrlParser: true })
+}
+
+const disconnect = () => {
+    mongoose.connection.close()
+}
+
+const deleteAll = () => {
+    return Blog.deleteMany({})
 }
 
 const save = (params) => {
@@ -28,12 +35,13 @@ const save = (params) => {
 }
 
 const all = () => {
-	return Blog.find({})
+	return Blog.find({}).exec()
 }
 
-
 module.exports = {
-    connect: connect,
-    save: save,
-    all: all
+    connect,
+    disconnect,
+    save,
+    all,
+    deleteAll
 }
