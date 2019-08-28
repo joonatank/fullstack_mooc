@@ -34,7 +34,7 @@ const disconnect = () => {
 }
 
 const deleteAll = () => {
-    return Blog.deleteMany({})
+    return Blog.deleteMany({}).exec()
 }
 
 const save = (params) => {

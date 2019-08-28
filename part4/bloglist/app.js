@@ -10,6 +10,7 @@ const bodyParser = require('body-parser')
 const app = express()
 const cors = require('cors')
 const blog = require('./models/blog')
+const users = require('./models/user')
 
 const db_name = (process.env.NODE_ENV === 'test') ?
     process.env.TEST_DATABASE :
@@ -55,6 +56,21 @@ app.put('/api/blogs/:id', async (request, response) => {
         response.status(200).json(res)
     } catch (error) {
         response.status(400).end() //json( {error: error.message } )
+    }
+})
+
+app.get('/api/users', async (request, response) => {
+	const resp = await users.all()
+    response.json(resp)
+})
+
+app.post('/api/users', async (request, response) => {
+    try {
+        const res = await users.create(request.body)
+        response.status(201).json(res)
+    } catch (error) {
+        console.error(error.message)
+        response.status(400).json( {error: error.message } )
     }
 })
 

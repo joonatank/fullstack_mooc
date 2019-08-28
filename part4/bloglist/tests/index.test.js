@@ -9,11 +9,13 @@ const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
 const blog = require('../models/blog')
+const users = require('../models/user')
 
 const helpers = require('./test_helpers')
 
 beforeEach(async () => {
-    await blog.deleteAll();
+    await blog.deleteAll()
+    await users.deleteAll()
 })
 
 const initialiseDB = (async () => {
@@ -224,6 +226,130 @@ describe('PUT blog post', () => {
         expect(N).toBe(COUNT)
     })
 })
+
+describe('GET users', () => {
+    test('get users succeeds with empty list', async () => {
+        await api.get('/api/users')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+            .then(resp => {
+                expect(resp.body.length).toBe(0)
+            })
+    })
+
+    test('get users succeeds and no passwords are returned', async () => {
+        const N_USERS = 1
+        const user = { username: 'felix', name: 'Felix the Magnificent', password: 'good123' }
+        await users.create(user)
+
+        const N = await users.count()
+        expect(N).toBe(N_USERS)
+
+        await api.get('/api/users')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+            .then(resp => {
+                expect(resp.body.length).toBe(N_USERS)
+                const m = resp.body[0]
+                expect(m.id).toBeDefined()
+                // check equality to ensure it contains NO password
+                expect(m).toEqual( {username: user.username, name: user.name, id: m.id} )
+            })
+    })
+
+    test('get users returns a list of all users', async () => {
+        const N_USERS = helpers.users.length
+
+        await Promise.all(
+            helpers.users.map(u => users.create(u))
+        )
+
+        const N = await users.count()
+        expect(N).toBe(N_USERS)
+
+        await api.get('/api/users')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+            .then(resp => {
+                expect(resp.body.length).toBe(N_USERS)
+            })
+    })
+})
+
+describe('POST users', () => {
+    test('post a new user succeeds', async () => {
+        const user = { username: 'felix', name: 'Felix the Magnificent', password: 'good123' }
+
+        const N = await users.count()
+        expect(N).toBe(0)
+
+        // post
+        await api.post('/api/users')
+            .send(user)
+            .set('Accept', 'application/json')
+            .expect(201)
+            .expect('Content-Type', /json/)
+            .then(resp => {
+                expect(resp.body[0]).not.toBeDefined()
+            })
+
+        // database
+        const after = await users.all()
+        expect(after.length).toBe(1)
+        expect(after[0].username).toBe(user.username)
+        expect(after[0].name).toBe(user.name)
+        expect(after[0].passwordHash).toBeDefined()
+    })
+
+    test('post a new user without username fails', async () => {
+        const user = { name: 'Felix the Magnificent', password: 'good123' }
+
+        const N = await users.count()
+        expect(N).toBe(0)
+
+        // post
+        await api.post('/api/users')
+            .send(user)
+            .set('Accept', 'application/json')
+            .expect(400)
+
+        const after = await users.count()
+        expect(after).toBe(0)
+    })
+
+    test('post a new user without name fails', async () => {
+        const user = { username: 'felix', password: 'good123' }
+
+        const N = await users.count()
+        expect(N).toBe(0)
+
+        // post
+        await api.post('/api/users')
+            .send(user)
+            .set('Accept', 'application/json')
+            .expect(400)
+
+        const after = await users.count()
+        expect(after).toBe(0)
+    })
+
+    test('post a new user without password fails', async () => {
+        const user = { username: 'felix', name: 'Felix the Magnificent' }
+
+        const N = await users.count()
+        expect(N).toBe(0)
+
+        // post
+        await api.post('/api/users')
+            .send(user)
+            .set('Accept', 'application/json')
+            .expect(400)
+
+        const after = await users.count()
+        expect(after).toBe(0)
+    })
+})
+
 
 describe('get wrong endpoint', () => {
     test('get on an wrong endpoint returns an error', async () => {

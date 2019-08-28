@@ -50,4 +50,14 @@ const blogs = [
   }
 ]
 
-module.exports = { blogs }
+const users = [
+    { username: 'felix', name: 'Felix the Magnificent', password: 'good123' },
+    { username: 'not-felix', name: 'Not Felix', password: 'good123' },
+    { username: 'feline', name: 'Felix not the Magnificent', password: 'good123' },
+    { username: 'cat', name: 'Felix the Less Magnificent', password: 'good123' },
+    { username: 'rat', name: 'Rat', password: 'good123' },
+    { username: 'dog', name: 'Wunder Hund', password: 'good123' },
+    { username: 'wolf', name: 'Nobody dares to name this one', password: 'good123' }
+]
+
+module.exports = { blogs, users }
