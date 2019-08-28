@@ -18,7 +18,8 @@ const userSchema = mongoose.Schema({
         }
     },
 	name: { type: String, required: true },
-	passwordHash: { type: String, required: true }
+	passwordHash: { type: String, required: true },
+    blogs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Blog' }]
 })
 
 userSchema.set('toJSON', {
@@ -52,7 +53,7 @@ const create = async (params) => {
 }
 
 const all = () => {
-	return User.find({}).exec()
+	return User.find({})
 }
 
 const deleteAll = () => {

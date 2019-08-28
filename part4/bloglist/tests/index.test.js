@@ -18,12 +18,19 @@ beforeEach(async () => {
     await users.deleteAll()
 })
 
-const initialiseDB = (async () => {
+const initialiseDB = (async (user) => {
     const COUNT = helpers.blogs.length
-    await Promise.all(
+    const nb = await Promise.all(
         helpers.blogs
-            .map(b => blog.save(b))
+            .map(b => blog.save(b, user ? user._id : null))
     )
+    // update the user
+    if (user) {
+        await Promise.all(
+            nb.map(b => user.blogs = user.blogs.concat(b))
+        )
+        await user.save()
+    }
 
     // check that the database is working first
     const N = await blog.count()
@@ -32,7 +39,13 @@ const initialiseDB = (async () => {
     return COUNT
 })
 
-describe('GET list', () => {
+// Needed for blog tests, but don't want it for user tests
+const createTestUser = async () => {
+    const user = { username: 'test', name: 'Felix the Magnificent', password: 'good123' }
+    return await users.create(user)
+}
+
+describe('GET blog', () => {
     test('get on empty database returns an empty list', async () => {
         await api.get('/api/blogs')
             .expect(200)
@@ -72,11 +85,28 @@ describe('GET list', () => {
                 expect(resp.body.length).toBe(N_BLOGS)
             })
     })
+
+    test('if post has a user it is populated', async () => {
+        const user = await createTestUser()
+        users.count().then(c => expect(c).toBe(1))
+
+        const newBlog = { title: 'this', author: 'that', url: 'somewhere', likes: 0 }
+        await blog.save(newBlog, user._id)
+
+        await api.get('/api/blogs')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+            .then(resp => {
+                expect(resp.body.length).toBe(1)
+
+                const refUser = { username: user.username, name: user.name, id: user._id.toString() }
+                expect(resp.body[0].user).toEqual(refUser)
+            })
+    })
 })
 
-describe('POST things', () => {
+describe('POST blog', () => {
     test('bad post endpoint will return 404', async () => {
-        // post
         await api.post('/api')
             .set('Accept', 'application/json')
             .expect(404)
@@ -86,12 +116,16 @@ describe('POST things', () => {
         expect(N).toBe(0)
     })
 
-    test('empty post will fail with 400', async () => {
-        // post
-        await api.post('/api/blogs')
+    const post_blog_fail = async (newBlog) => {
+        return await api.post('/api/blogs')
+            .send(newBlog)
             .set('Accept', 'application/json')
             .expect(400)
             .expect('Content-Type', /json/)
+    }
+
+    test('empty post will fail with 400', async () => {
+        post_blog_fail({})
 
         // database
         const N = await blog.count()
@@ -100,12 +134,8 @@ describe('POST things', () => {
 
     test('post without author will fail with 400', async () => {
         const newBlog = { title: 'this', url: 'somewhere', likes: 0 }
-        // post
-        await api.post('/api/blogs')
-            .send(newBlog)
-            .set('Accept', 'application/json')
-            .expect(400)
-            .expect('Content-Type', /json/)
+
+        post_blog_fail(newBlog)
 
         // database
         const N = await blog.count()
@@ -114,12 +144,8 @@ describe('POST things', () => {
 
     test('post without url will fail with 400', async () => {
         const newBlog = { title: 'this', author: 'that', likes: 0 }
-        // post
-        await api.post('/api/blogs')
-            .send(newBlog)
-            .set('Accept', 'application/json')
-            .expect(400)
-            .expect('Content-Type', /json/)
+
+        post_blog_fail(newBlog)
 
         // database
         const N = await blog.count()
@@ -170,6 +196,23 @@ describe('POST things', () => {
         expect(after[0].url).toBe(newBlog.url)
         expect(after[0].likes).toBe(0)
     })
+
+    test('if we have a user then the post is linked to her', async () => {
+        const user = await createTestUser()
+        users.count().then(c => expect(c).toBe(1))
+
+        const newBlog = { title: 'this', author: 'that', url: 'somewhere', likes: 0 }
+        // post
+        await api.post('/api/blogs')
+            .send(newBlog)
+            .set('Accept', 'application/json')
+            .expect(201)
+
+        const after = await blog.all()
+        expect(after.length).toBe(1)
+        expect(after[0].user.toString()).toBe(user._id.toString())
+    })
+
 })
 
 describe('DELETE blog post', () => {
@@ -253,7 +296,7 @@ describe('GET users', () => {
                 const m = resp.body[0]
                 expect(m.id).toBeDefined()
                 // check equality to ensure it contains NO password
-                expect(m).toEqual( {username: user.username, name: user.name, id: m.id} )
+                expect(m).toEqual( {username: user.username, name: user.name, id: m.id, blogs: [] } )
             })
     })
 
@@ -272,6 +315,30 @@ describe('GET users', () => {
             .expect('Content-Type', /application\/json/)
             .then(resp => {
                 expect(resp.body.length).toBe(N_USERS)
+                expect(resp.body[0].blogs).toBeDefined()
+            })
+    })
+
+    test('get users list has blogs', async () => {
+        const user = { username: 'felix', name: 'Felix the Magnificent', password: 'good123' }
+        userObj = await users.create(user)
+
+        // create all six blog posts with the single user
+        await initialiseDB(userObj)
+
+        await api.get('/api/users')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+            .then(resp => {
+                expect(resp.body.length).toBe(1)
+                const m = resp.body[0]
+                expect(m.blogs.length).toBe(6)
+
+                b = m.blogs[0]
+                a = helpers.blogs[0]
+                expect(b.author).toBe(a.author)
+                expect(b.title).toBe(a.title)
+                expect(b.likes).toBe(a.likes)
             })
     })
 })

@@ -23,13 +23,15 @@ app.use(cors())
 app.use(bodyParser.json())
 
 app.get('/api/blogs', async (request, response) => {
-	const blogs = await blog.all()
+	const blogs = await blog.all().populate('user', { username: 1, name: 1 })
     response.json(blogs)
 })
 
 app.post('/api/blogs', async (request, response) => {
     try {
-        const res = await blog.save(request.body)
+        const all_users = await users.all()
+        const user = (all_users.length > 0) ? all_users[0]: ''
+        const res = await blog.save(request.body, user._id)
         response.status(201).json(res)
     } catch (error) {
         console.error(error.message)
@@ -60,7 +62,7 @@ app.put('/api/blogs/:id', async (request, response) => {
 })
 
 app.get('/api/users', async (request, response) => {
-	const resp = await users.all()
+	const resp = await users.all().populate('blogs')
     response.json(resp)
 })
 

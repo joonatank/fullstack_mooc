@@ -10,7 +10,8 @@ const blogSchema = mongoose.Schema({
 	title: String,
 	author: { type: String, required: true },
 	url: { type: String, required: true },
-	likes: { type: Number, default: 0 }
+	likes: { type: Number, default: 0 },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 })
 
 blogSchema.set('toJSON', {
@@ -37,8 +38,8 @@ const deleteAll = () => {
     return Blog.deleteMany({}).exec()
 }
 
-const save = (params) => {
-	const blog = new Blog(params)
+const save = (params, id) => {
+	const blog = new Blog({...params, user: id})
     return blog.save()
 }
 
@@ -59,7 +60,7 @@ const count = () => {
 }
 
 const all = () => {
-	return Blog.find({}).exec()
+	return Blog.find({})
 }
 
 module.exports = {
