@@ -2,7 +2,7 @@
  *  2019-08-28
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 4.8 - 4.9
+ *  Exercise 4.8 - 4.14
  */
 
 const supertest = require('supertest')
@@ -24,8 +24,8 @@ const initialiseDB = (async () => {
     )
 
     // check that the database is working first
-    const b = await blog.all()
-    expect(b.length).toBe(COUNT)
+    const N = await blog.count()
+    expect(N).toBe(COUNT)
 
     return COUNT
 })
@@ -45,8 +45,8 @@ describe('GET list', () => {
         const N_BLOGS = 1
         await blog.save(BLOG)
 
-        const b = await blog.all()
-        expect(b.length).toBe(N_BLOGS)
+        const N = await blog.count()
+        expect(N).toBe(N_BLOGS)
 
         await api.get('/api/blogs')
             .expect(200)
@@ -80,8 +80,8 @@ describe('POST things', () => {
             .expect(404)
 
         // database
-        const after  = await blog.all()
-        expect(after.length).toBe(0)
+        const N = await blog.count()
+        expect(N).toBe(0)
     })
 
     test('empty post will fail with 400', async () => {
@@ -92,8 +92,8 @@ describe('POST things', () => {
             .expect('Content-Type', /json/)
 
         // database
-        const after  = await blog.all()
-        expect(after.length).toBe(0)
+        const N = await blog.count()
+        expect(N).toBe(0)
     })
 
     test('post without author will fail with 400', async () => {
@@ -106,8 +106,8 @@ describe('POST things', () => {
             .expect('Content-Type', /json/)
 
         // database
-        const after  = await blog.all()
-        expect(after.length).toBe(0)
+        const N = await blog.count()
+        expect(N).toBe(0)
     })
 
     test('post without url will fail with 400', async () => {
@@ -120,15 +120,15 @@ describe('POST things', () => {
             .expect('Content-Type', /json/)
 
         // database
-        const after  = await blog.all()
-        expect(after.length).toBe(0)
+        const N = await blog.count()
+        expect(N).toBe(0)
     })
 
     test('one good post is found after', async () => {
         const newBlog = { title: 'this', author: 'that', url: 'somewhere', likes: 0 }
 
-        const before = await blog.all()
-        expect(before.length).toBe(0)
+        const Nb = await blog.count()
+        expect(Nb).toBe(0)
 
         // post
         await api.post('/api/blogs')
@@ -144,7 +144,7 @@ describe('POST things', () => {
             })
 
         // database
-        const after  = await blog.all()
+        const after = await blog.all()
         expect(after.length).toBe(1)
         expect(after[0].title).toBe(newBlog.title)
         expect(after[0].author).toBe(newBlog.author)
@@ -161,7 +161,7 @@ describe('POST things', () => {
             .expect(201)
 
         // database
-        const after  = await blog.all()
+        const after = await blog.all()
         expect(after.length).toBe(1)
         expect(after[0].title).toBe(newBlog.title)
         expect(after[0].author).toBe(newBlog.author)
@@ -178,8 +178,8 @@ describe('DELETE blog post', () => {
         await api.delete(`/api/blogs/${id}`)
             .expect(200)
 
-        const after  = await blog.all()
-        expect(after.length).toBe(COUNT-1)
+        const N = await blog.count()
+        expect(N).toBe(COUNT-1)
     })
 
     test('delete one with invalid id should fail', async () => {
@@ -188,8 +188,40 @@ describe('DELETE blog post', () => {
         await api.delete('/api/blogs/invalid_id')
             .expect(400)
 
-        const after  = await blog.all()
-        expect(after.length).toBe(COUNT)
+        const N = await blog.count()
+        expect(N).toBe(COUNT)
+
+    })
+})
+
+describe('PUT blog post', () => {
+    test('put a like should succeed', async () => {
+        const COUNT = await initialiseDB()
+        const first = helpers.blogs[0]
+        const id = first._id
+
+        await api.put(`/api/blogs/${id}`)
+            .send({ likes: first.likes + 1 })
+            .expect(200)
+
+        const N = await blog.count()
+        expect(N).toBe(COUNT)
+
+        const after = await blog.get(id)
+        expect(after.author).toBe(first.author)
+        expect(after.title).toBe(first.title)
+        expect(after.url).toBe(first.url)
+        expect(after.likes).toBe(first.likes+1)
+    })
+
+    test('put invalid id should fail', async () => {
+        const COUNT = await initialiseDB()
+
+        await api.put('/api/blogs/invalid_id')
+            .expect(400)
+
+        const N = await blog.count()
+        expect(N).toBe(COUNT)
     })
 })
 

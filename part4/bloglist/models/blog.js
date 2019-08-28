@@ -2,7 +2,7 @@
  *  2019-08-28
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 4.1 - 4.9
+ *  Exercise 4.1 - 4.14
  */
 const mongoose = require('mongoose')
 
@@ -46,6 +46,17 @@ const remove = (id) => {
     return Blog.findByIdAndDelete(id).exec()
 }
 
+const update = (id, params) => {
+    return Blog.findByIdAndUpdate(id, params).exec()
+}
+
+const get = (id) => {
+	return Blog.findById(id).exec()
+}
+
+const count = () => {
+	return Blog.countDocuments({}).exec()
+}
 
 const all = () => {
 	return Blog.find({}).exec()
@@ -57,5 +68,8 @@ module.exports = {
     save,
     all,
     remove,
+    update,
+    get,
+    count,
     deleteAll
 }
