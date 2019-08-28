@@ -2,7 +2,7 @@
  *  2019-08-28
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 4.8
+ *  Exercise 4.8 - 4.9
  */
 
 const supertest = require('supertest')
@@ -41,6 +41,7 @@ describe('get list', () => {
                 expect(resp.body.length).toBe(N_BLOGS)
                 expect(resp.body[0].title).toBe(BLOG.title)
                 expect(resp.body[0].author).toBe(BLOG.author)
+                expect(resp.body[0].id).toBeDefined()
             })
     })
 

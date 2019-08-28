@@ -2,7 +2,7 @@
  *  2019-08-28
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 4.1 - 4.2
+ *  Exercise 4.1 - 4.9
  */
 const mongoose = require('mongoose')
 
@@ -11,6 +11,14 @@ const blogSchema = mongoose.Schema({
 	author: String,
 	url: String,
 	likes: Number
+})
+
+blogSchema.set('toJSON', {
+    transform: (document, obj) => {
+        obj.id = obj._id.toString()
+        delete obj._id
+        delete obj.__v
+    }
 })
 
 const Blog = mongoose.model('Blog', blogSchema)
