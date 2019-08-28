@@ -95,7 +95,6 @@ describe('POST things', () => {
         expect(after[0].title).not.toBeDefined()
         expect(after[0].author).not.toBeDefined()
         expect(after[0].url).not.toBeDefined()
-        expect(after[0].likes).not.toBeDefined()
     })
 
     test('one good post is found after', async () => {
@@ -124,6 +123,23 @@ describe('POST things', () => {
         expect(after[0].author).toBe(newBlog.author)
         expect(after[0].url).toBe(newBlog.url)
         expect(after[0].likes).toBe(newBlog.likes)
+    })
+
+    test('missing likes defaults to zero', async () => {
+        const newBlog = { title: 'this', author: 'that', url: 'somewhere' }
+        // post
+        await api.post('/api/blogs')
+            .send(newBlog)
+            .set('Accept', 'application/json')
+            .expect(201)
+
+        // database
+        const after  = await blog.all()
+        expect(after.length).toBe(1)
+        expect(after[0].title).toBe(newBlog.title)
+        expect(after[0].author).toBe(newBlog.author)
+        expect(after[0].url).toBe(newBlog.url)
+        expect(after[0].likes).toBe(0)
     })
 })
 
