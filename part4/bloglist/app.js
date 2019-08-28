@@ -26,8 +26,9 @@ app.get('/api/blogs', async (request, response) => {
     response.json(blogs)
 })
 
-app.post('/api/blogs', (request, response) => {
-	blog.save(request.body).then(result => response.status(201).json(result))
+app.post('/api/blogs', async (request, response) => {
+    const res = await blog.save(request.body)
+    response.status(201).json(res)
 })
 
 module.exports = app
