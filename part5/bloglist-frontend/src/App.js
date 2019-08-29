@@ -204,7 +204,7 @@ const App = () => {
                 { !postBlogVisible &&
                     <button onClick={() => setPostBlogVisible(true)}>create new</button>
                 }
-                {blogs.map(b => <Blog key={b.id} blog={b} blogChangedCb={handleBlogChange} /> )}
+                {blogs.map(b => <Blog key={b.id} blog={b} user={user} blogChangedCb={handleBlogChange} /> )}
             </div>
         }
         </div>

@@ -6,7 +6,8 @@
  */
 import React, { useState } from 'react'
 
-const Blog = ({ blog, blogChangedCb }) => {
+// This assumes that the usernames are unique since we don't have ids here
+const Blog = ({ blog, user, blogChangedCb }) => {
     const blogStyle = {
         paddingTop: 10,
         paddingLeft: 2,
@@ -35,7 +36,9 @@ const Blog = ({ blog, blogChangedCb }) => {
         blogChangedCb(blog, null)
     }
 
+    // Handle posts without users (compatibility reasons)
     const name = blog.user ? blog.user.name : 'unknown'
+    const username = blog.user ? blog.user.username : 'unknown'
 
     return (
     <div style={blogStyle} onClick={handleBlogClick}>
@@ -45,7 +48,9 @@ const Blog = ({ blog, blogChangedCb }) => {
             <p>{blog.url}</p>
             <p>{blog.likes} likes <button onClick={(e) => handleLikeButton(e, blog)}>like</button></p>
             <p>added by {name}</p>
-            <button onClick={(e) => handleRemoveButton(e, blog)}>remove</button>
+            {username === user.username &&
+                <button onClick={(e) => handleRemoveButton(e, blog)}>remove</button>
+            }
             </div>
         }
         { !expand && <p>{blog.title} by {blog.author}</p> }
