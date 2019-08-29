@@ -5,6 +5,7 @@
  *  Exercise 5.1 - 5.6
  */
 import React, { useState } from 'react'
+import PropTypes from 'prop-types'
 
 // This assumes that the usernames are unique since we don't have ids here
 const Blog = ({ blog, user, blogChangedCb }) => {
@@ -57,5 +58,12 @@ const Blog = ({ blog, user, blogChangedCb }) => {
     </div>
     )
 }
+
+Blog.propTypes = {
+    blog : PropTypes.object.isRequired,
+    user : PropTypes.object.isRequired,
+    blogChangedCb : PropTypes.func.isRequired
+}
+
 
 export default Blog
