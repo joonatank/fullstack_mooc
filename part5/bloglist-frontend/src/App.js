@@ -29,6 +29,8 @@ const App = () => {
     //
     const [ flash, setFlash] = useState(null)
     const [ errorFlash, setErrorFlash] = useState(null)
+    //
+    const [ postBlogVisible, setPostBlogVisible ] = useState(false)
 
     const handleLogin = async (event) => {
         event.preventDefault()
@@ -141,9 +143,11 @@ const App = () => {
                 />
             </div>
             <button type='submit'>create</button>
+            <button onClick={() => setPostBlogVisible(false)}>cancel</button>
             </form>
         )
     }
+
 
     return (
         <div>
@@ -151,13 +155,15 @@ const App = () => {
         <Flash msg={errorFlash} look="error"/>
         {user === null && loginForm()}
         {user !== null &&
-                <div>
+            <div>
                 <User user={user} logoutCb={handleLogout} />
                 <h1>Blogs</h1>
-                {blogs.map(b => <Blog key={b.id} blog={b} />)}
-                <br />
-                {newBlogForm()}
-                </div>
+                { postBlogVisible && newBlogForm()}
+                { !postBlogVisible &&
+                    <button onClick={() => setPostBlogVisible(true)}>create new</button>
+                }
+                {blogs.map(b => <Blog key={b.id} blog={b} /> )}
+            </div>
         }
         </div>
     )
