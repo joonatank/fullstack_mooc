@@ -9,6 +9,7 @@ import Blog from './components/Blog'
 import Flash from './components/Flash'
 import service from './service'
 import './App.css'
+import * as _ from 'lodash';
 
 const STORAGE_USER = 'loggedBloglistappUser'
 
@@ -97,7 +98,8 @@ const App = () => {
 
     useEffect( () => {
         service.blogs().then( res => {
-            setBlogs(res)
+            const b = _.sortBy(res, ['likes', 'title']).reverse()
+            setBlogs(b)
             setBlogsDirty(false)
         })
     }, [user, newTitle, blogsDirty]) // TODO don't like this, but otherwise the event handler doesn't work
