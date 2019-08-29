@@ -11,12 +11,12 @@ const Country = ({ country }) => {
         <p>population: {country.population}</p>
         <h3>languages</h3>
         <li>{country.lang.map(x => <ul key={x}>{x}</ul>)}</li>
-        <img src={country.flag} height='128' />
+        <img src={country.flag} height='128' alt='FLAG'/>
         </div>
     )
 }
 
-const Countries = ({countries}) => {
+const Countries = ({countries, showCb}) => {
     const matches = countries.length
 
     const translateCountry = (c) => {
@@ -30,11 +30,21 @@ const Countries = ({countries}) => {
         }
     }
 
+    const listElement = (x, cb) => {
+         return (
+             <ul key={x}>{x}
+                 <button type='submit' onClick={cb.bind(this, x)}>show</button>
+             </ul>
+         )
+    }
+
     return (
         <div>
         {matches === 1 && <Country country={translateCountry(countries[0])} /> }
         {matches > 1 && matches <  10
-                && <li>{countries.map(c => <ul key={c.name}>{c.name}</ul>)}</li>}
+                && <li>{countries.map(c => listElement(c.name, showCb))}</li>
+
+        }
         {matches >= 10 && <p>Too many matches, specify another filter</p>}
         <br />
         <p>Info: matches {matches}</p>
@@ -58,12 +68,17 @@ const App = () => {
         setFilter(event.target.value)
     }
 
+    const handleShow = (name) => {
+        console.log('handleShow', name)
+        setFilter(name)
+    }
+
     return (
     <div className="App">
         <p>find countries
             <input value={filter} onChange={filterChangeCb} />
         </p>
-        <Countries countries={countries} />
+        <Countries countries={countries} showCb={handleShow} />
     </div>
     )
 }
