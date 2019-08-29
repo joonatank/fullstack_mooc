@@ -26,15 +26,14 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use('/api/login', loginRouter)
 
-const getTokenFrom = req => {
+const tokenExtractor = (req, res, next) => {
     const auth = req.get('authorization')
     if (auth && auth.toLowerCase().startsWith('bearer')) {
-        return auth.substring(7)
+        req.token = auth.substring(7)
     }
-    else {
-        return null
-    }
+    next()
 }
+app.use(tokenExtractor)
 
 app.get('/api/blogs', async (request, response) => {
 	const blogs = await blog.all().populate('user', { username: 1, name: 1 })
@@ -43,8 +42,7 @@ app.get('/api/blogs', async (request, response) => {
 
 app.post('/api/blogs', async (request, response, next) => {
     try {
-        const token = getTokenFrom(request)
-        const decodedToken = jwt.verify(token, process.env.SECRET)
+        const decodedToken = jwt.verify(request.token, process.env.SECRET)
         const user = await users.get(decodedToken.id)
 
         const res = await blog.save(request.body, user._id)
