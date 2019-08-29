@@ -4,20 +4,21 @@
  *  Helsinki Fullstack Mooc
  *  Exercise 5.1 - 5.3
  */
-import React, {useState, useEffect} from 'react'
+import React, { useState, useEffect } from 'react'
 import Blog from './components/Blog'
 import Flash from './components/Flash'
 import service from './service'
 import './App.css'
-import * as _ from 'lodash';
+import * as _ from 'lodash'
 
 const STORAGE_USER = 'loggedBloglistappUser'
 
-const User = ({ user, logoutCb }) => {
-    return (
-        <p>{user.name} loggged in <button onClick={logoutCb.bind(this, user)}>logout</button></p>
-    )
-}
+const User = ({ user, logoutCb }) => (
+    <p>
+        {user.name} loggged in
+        <button onClick={logoutCb.bind(this, user)}>logout</button>
+    </p>
+)
 
 const App = () => {
     const [username, setUsername] = useState('')
@@ -106,48 +107,48 @@ const App = () => {
 
     const loginForm = () => {
         return (
-        <form onSubmit={handleLogin}>
-            <div>
-                username
-                <input type='text' value={username} name='Username'
-                    onChange={ ({ target }) => setUsername(target.value) }
-                />
-            </div>
-            <div>
-                password
-                <input type='password' value={password} name='Password'
-                    onChange={ ({ target }) => setPassword(target.value) }
-                />
-            </div>
-            <button type='submit'>login</button>
-        </form>
+            <form onSubmit={handleLogin}>
+                <div>
+                    username
+                    <input type='text' value={username} name='Username'
+                        onChange={ ({ target }) => setUsername(target.value) }
+                    />
+                </div>
+                <div>
+                    password
+                    <input type='password' value={password} name='Password'
+                        onChange={ ({ target }) => setPassword(target.value) }
+                    />
+                </div>
+                <button type='submit'>login</button>
+            </form>
         )
     }
 
     const newBlogForm = () => {
         return (
             <form onSubmit={handleNewBlog}>
-            <h2>Create new blog link</h2>
-            <div>
-                title
-                <input type='text' value={newTitle} name='title'
-                    onChange={ ({ target }) => setNewTitle(target.value) }
-                />
-            </div>
-            <div>
-                author
-                <input type='text' value={newAuthor} name='author'
-                    onChange={ ({ target }) => setNewAuthor(target.value) }
-                />
-            </div>
-            <div>
-                url
-                <input type='text' value={newUrl} name='url'
-                    onChange={ ({ target }) => setNewUrl(target.value) }
-                />
-            </div>
-            <button type='submit'>create</button>
-            <button onClick={() => setPostBlogVisible(false)}>cancel</button>
+                <h2>Create new blog link</h2>
+                <div>
+                    title
+                    <input type='text' value={newTitle} name='title'
+                        onChange={ ({ target }) => setNewTitle(target.value) }
+                    />
+                </div>
+                <div>
+                    author
+                    <input type='text' value={newAuthor} name='author'
+                        onChange={ ({ target }) => setNewAuthor(target.value) }
+                    />
+                </div>
+                <div>
+                    url
+                    <input type='text' value={newUrl} name='url'
+                        onChange={ ({ target }) => setNewUrl(target.value) }
+                    />
+                </div>
+                <button type='submit'>create</button>
+                <button onClick={() => setPostBlogVisible(false)}>cancel</button>
             </form>
         )
     }
@@ -155,7 +156,7 @@ const App = () => {
     const handleBlogChange = (blog, params) => {
         if (params === null) {
             console.log('Should send DELETE message')
-            service.del_blog(user, blog).then(res => {
+            service.del_blog(user, blog).then( () => {
                 console.log('success')
 
                 setBlogsDirty(true)
@@ -176,7 +177,7 @@ const App = () => {
             })
         }
         else {
-            service.put_blog(user, blog, params).then(res => {
+            service.put_blog(user, blog, params).then( () => {
                 console.log('success')
                 // not a good idea but forcing an update to the effect
                 setBlogsDirty(true)
@@ -193,22 +194,22 @@ const App = () => {
 
     return (
         <div>
-        <Flash msg={flash} look="status"/>
-        <Flash msg={errorFlash} look="error"/>
-        {user === null && loginForm()}
-        {user !== null &&
-            <div>
-                <User user={user} logoutCb={handleLogout} />
-                <h1>Blogs</h1>
-                { postBlogVisible && newBlogForm()}
-                { !postBlogVisible &&
-                    <button onClick={() => setPostBlogVisible(true)}>create new</button>
-                }
-                {blogs.map(b => <Blog key={b.id} blog={b} user={user} blogChangedCb={handleBlogChange} /> )}
-            </div>
-        }
+            <Flash msg={flash} look="status"/>
+            <Flash msg={errorFlash} look="error"/>
+            {user === null && loginForm()}
+            {user !== null &&
+                <div>
+                    <User user={user} logoutCb={handleLogout} />
+                    <h1>Blogs</h1>
+                    { postBlogVisible && newBlogForm()}
+                    { !postBlogVisible &&
+                        <button onClick={() => setPostBlogVisible(true)}>create new</button>
+                    }
+                    {blogs.map(b => <Blog key={b.id} blog={b} user={user} blogChangedCb={handleBlogChange} /> )}
+                </div>
+            }
         </div>
     )
 }
 
-export default App;
+export default App

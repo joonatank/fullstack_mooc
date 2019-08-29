@@ -8,14 +8,14 @@
  */
 import React from 'react'
 
-const Flash = ({msg, look}) => {
+const Flash = ({ msg, look }) => {
     if (msg === null || msg === '') {
         return null
     }
     else {
         return (
             <div className={look}>
-            {msg}
+                {msg}
             </div>
         )
     }
