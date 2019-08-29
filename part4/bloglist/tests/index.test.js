@@ -2,7 +2,7 @@
  *  2019-08-28
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 4.8 - 4.19
+ *  Exercise 4.1 - 4.21
  */
 
 const supertest = require('supertest')
@@ -23,32 +23,52 @@ afterAll(async () => {
     await blog.disconnect()
 })
 
-const initialiseDB = (async (user) => {
-    const COUNT = helpers.blogs.length
+const assert_blog_count = async (n) => {
+    const N = await blog.count()
+    expect(N).toBe(n)
+}
+
+const post_login = async (opts) => {
+    return await api.post('/api/login')
+        .send({ username: opts.username, password: opts.password })
+        .set('Accept', 'application/json')
+        .expect(200)
+        .then(r => r.body.token)
+}
+
+const initialiseDB = async (user, blogs) => {
+    if (!user) {
+        throw 'can\'t initialise database without a user'
+    }
+    const blog_list = blogs ? blogs : helpers.blogs
+
+    const COUNT = blog_list.length
     const nb = await Promise.all(
-        helpers.blogs
-            .map(b => blog.save(b, user ? user._id : null))
+        blog_list
+            .map(b => blog.save(b, user._id ))
     )
     // update the user
-    if (user) {
-        await Promise.all(
-            nb.map(b => user.blogs = user.blogs.concat(b))
-        )
-        await user.save()
-    }
+    await Promise.all(
+        nb.map(b => user.blogs = user.blogs.concat(b))
+    )
+    await user.save()
 
-    // check that the database is working first
-    const N = await blog.count()
-    expect(N).toBe(COUNT)
+    await assert_blog_count(COUNT)
 
     return COUNT
-})
+}
 
 // Needed for blog tests, but don't want it for user tests
 const USER_PASSWORD = 'good123'
 const createTestUser = async () => {
-    const user = { username: 'test', name: 'Felix the Magnificent', password: USER_PASSWORD }
+    const user = { username: 'test', name: 'Test the Magnificent', password: USER_PASSWORD }
     return await users.create(user)
+}
+
+const create_multiple_users = async () => {
+    return await Promise.all(
+        helpers.users.map(u => users.create(u))
+    )
 }
 
 describe('GET blog', () => {
@@ -62,12 +82,11 @@ describe('GET blog', () => {
     })
 
     test('get on with one element in database returns one element', async () => {
+        const user = await createTestUser()
         const BLOG = helpers.blogs[0]
-        const N_BLOGS = 1
-        await blog.save(BLOG)
+        const N_BLOGS = await initialiseDB(user, [BLOG])
 
-        const N = await blog.count()
-        expect(N).toBe(N_BLOGS)
+        await assert_blog_count(N_BLOGS)
 
         await api.get('/api/blogs')
             .expect(200)
@@ -81,7 +100,8 @@ describe('GET blog', () => {
     })
 
     test('get with six elements in database returns six elements', async () => {
-        const N_BLOGS = await initialiseDB()
+        const user = await createTestUser()
+        const N_BLOGS = await initialiseDB(user)
 
         // check the same with a get
         await api.get('/api/blogs')
@@ -149,14 +169,6 @@ describe('POST blog', () => {
 
         await assert_post_count(0)
     })
-
-    const post_login = async (opts) => {
-        return await api.post('/api/login')
-            .send({ username: opts.username, password: opts.password })
-            .set('Accept', 'application/json')
-            .expect(200)
-            .then(r => r.body.token)
-    }
 
     // Need tokens for all the following tests
     // have to do a login request since we don't have a Session type
@@ -245,32 +257,72 @@ describe('POST blog', () => {
 })
 
 describe('DELETE blog post', () => {
-    test('delete one should succeed', async () => {
-        const COUNT = await initialiseDB()
+    test('delete one when not logged in should fail with 401', async () => {
+        const user = await createTestUser()
+        const COUNT = await initialiseDB(user)
         const id = helpers.blogs[0]._id
 
+        // No token set will fail
         await api.delete(`/api/blogs/${id}`)
-            .expect(200)
+            .expect(401)
 
-        const N = await blog.count()
-        expect(N).toBe(COUNT-1)
+        await assert_blog_count(COUNT)
     })
 
-    test('delete one with invalid id should fail', async () => {
-        const COUNT = await initialiseDB()
+    test('delete one when logged in should succeed', async () => {
+        const user = await createTestUser()
+        const token = await post_login({ username: user.username, password: USER_PASSWORD })
+
+        const COUNT = await initialiseDB(user)
+        const blog_id = helpers.blogs[0]._id
+
+        await api.delete(`/api/blogs/${blog_id}`)
+            .set({ 'Authorization': 'bearer '.concat(token) })
+            .set('Accept', 'application/json')
+            .expect(200)
+
+        await assert_blog_count(COUNT-1)
+    })
+
+    test('delete one with different user should fail with 403', async () => {
+        const invalid_user = await createTestUser()
+        const more_users = await create_multiple_users()
+        const blog_user = more_users[0]
+
+        const COUNT = await initialiseDB(blog_user)
+        const blog_id = helpers.blogs[0]._id
+
+        await assert_blog_count(COUNT)
+
+        // login different user
+        const token = await post_login({ username: invalid_user.username, password: USER_PASSWORD })
+
+        await api.delete(`/api/blogs/${blog_id}`)
+            .set({ 'Authorization': 'bearer '.concat(token) })
+            .set('Accept', 'application/json')
+            .expect(403)
+
+        await assert_blog_count(COUNT)
+    })
+
+    test('delete one with invalid id should fail with 400', async () => {
+        const user = await createTestUser()
+        const COUNT = await initialiseDB(user)
+
+        const token = await post_login({ username: user.username, password: USER_PASSWORD })
 
         await api.delete('/api/blogs/invalid_id')
+            .set({ 'Authorization': 'bearer '.concat(token) })
             .expect(400)
 
-        const N = await blog.count()
-        expect(N).toBe(COUNT)
-
+        await assert_blog_count(COUNT)
     })
 })
 
 describe('PUT blog post', () => {
     test('put a like should succeed', async () => {
-        const COUNT = await initialiseDB()
+        const user = await createTestUser()
+        const COUNT = await initialiseDB(user)
         const first = helpers.blogs[0]
         const id = first._id
 
@@ -278,8 +330,7 @@ describe('PUT blog post', () => {
             .send({ likes: first.likes + 1 })
             .expect(200)
 
-        const N = await blog.count()
-        expect(N).toBe(COUNT)
+        await assert_blog_count(COUNT)
 
         const after = await blog.get(id)
         expect(after.author).toBe(first.author)
@@ -289,13 +340,13 @@ describe('PUT blog post', () => {
     })
 
     test('put invalid id should fail', async () => {
-        const COUNT = await initialiseDB()
+        const user = await createTestUser()
+        const COUNT = await initialiseDB(user)
 
         await api.put('/api/blogs/invalid_id')
             .expect(400)
 
-        const N = await blog.count()
-        expect(N).toBe(COUNT)
+        await assert_blog_count(COUNT)
     })
 })
 

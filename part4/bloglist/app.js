@@ -2,7 +2,7 @@
  *  2019-08-28
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 4.1 - 4.19
+ *  Exercise 4.1 - 4.21
  */
 require('dotenv').config()
 const express = require('express')
@@ -52,14 +52,21 @@ app.post('/api/blogs', async (request, response, next) => {
     }
 })
 
-app.delete('/api/blogs/:id', async (request, response) => {
+app.delete('/api/blogs/:id', async (request, response, next) => {
     try {
+        const decodedToken = jwt.verify(request.token, process.env.SECRET)
+        const user = await users.get(decodedToken.id)
+
         const id = request.params.id
-        const res = await blog.remove(id)
-        response.status(200).json(res)
+        const res = await blog.remove(id, user)
+        if (res) {
+            response.status(200).json(res)
+        }
+        else {
+            response.status(403).end()
+        }
     } catch (error) {
-        console.error(error.message)
-        response.status(400).json( {error: error.message } )
+        next(error)
     }
 })
 

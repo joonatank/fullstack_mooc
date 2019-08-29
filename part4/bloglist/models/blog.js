@@ -2,7 +2,7 @@
  *  2019-08-28
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 4.1 - 4.14
+ *  Exercise 4.1 - 4.21
  */
 const mongoose = require('mongoose')
 
@@ -11,7 +11,7 @@ const blogSchema = mongoose.Schema({
 	author: { type: String, required: true },
 	url: { type: String, required: true },
 	likes: { type: Number, default: 0 },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 })
 
 blogSchema.set('toJSON', {
@@ -43,8 +43,8 @@ const save = (params, id) => {
     return blog.save()
 }
 
-const remove = (id) => {
-    return Blog.findByIdAndDelete(id).exec()
+const remove = (id, user) => {
+    return Blog.findOneAndRemove({ _id: id, user: user })
 }
 
 const update = (id, params) => {
