@@ -50,10 +50,24 @@ const put_blog = (user, blog, params) => {
     return request.then(response => response.data)
 }
 
+const del_blog = (user, blog) => {
+    if (!user) { throw 'incorrect user' }
+    if (!blog) { throw 'can\'t post empty blog' }
+
+    const config = {
+        headers: { Authorization: 'bearer '.concat(user.token) }
+    }
+
+    const url = host.concat(blogUrl).concat('/').concat(blog.id)
+    const request = axios.delete(url, config)
+    return request.then(response => response.data)
+}
+
 export default {
     login,
     blogs,
     post_blog,
     put_blog,
+    del_blog
 }
 

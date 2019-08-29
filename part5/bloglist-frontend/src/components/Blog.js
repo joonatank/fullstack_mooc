@@ -28,6 +28,13 @@ const Blog = ({ blog, blogChangedCb }) => {
         blogChangedCb(blog, { likes: blog.likes+1 })
     }
 
+    const handleRemoveButton = (event, blog) => {
+        event.preventDefault()
+        event.stopPropagation()
+
+        blogChangedCb(blog, null)
+    }
+
     const name = blog.user ? blog.user.name : 'unknown'
 
     return (
@@ -38,6 +45,7 @@ const Blog = ({ blog, blogChangedCb }) => {
             <p>{blog.url}</p>
             <p>{blog.likes} likes <button onClick={(e) => handleLikeButton(e, blog)}>like</button></p>
             <p>added by {name}</p>
+            <button onClick={(e) => handleRemoveButton(e, blog)}>remove</button>
             </div>
         }
         { !expand && <p>{blog.title} by {blog.author}</p> }

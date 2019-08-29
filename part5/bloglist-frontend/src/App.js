@@ -153,18 +153,42 @@ const App = () => {
     }
 
     const handleBlogChange = (blog, params) => {
-        service.put_blog(user, blog, params).then(res => {
-            console.log('success')
-            // not a good idea but forcing an update to the effect
-            setBlogsDirty(true)
+        if (params === null) {
+            console.log('Should send DELETE message')
+            service.del_blog(user, blog).then(res => {
+                console.log('success')
 
-            setFlash('Updated blog post: ' + blog.title)
-            setTimeout(() => setFlash(null), 5000)
-        }).catch(err => {
-            console.error(err)
-            setErrorFlash(err.message)
-            setTimeout(() => setErrorFlash(null), 5000)
-        })
+                setBlogsDirty(true)
+
+                setFlash('Removed blog post: ' + blog.title)
+                setTimeout(() => setFlash(null), 5000)
+            }).catch(err => {
+                // Rather silly way of checking the error code
+                if (err.message.slice(-3) === '403') {
+                    setErrorFlash('Can\'t delete post: ' + blog.name + ' insufficent access')
+                }
+                else {
+                    setErrorFlash('Can\'t delete post: ' + blog.name + ' : ' + err.message)
+                }
+
+                console.error(err)
+                setTimeout(() => setErrorFlash(null), 5000)
+            })
+        }
+        else {
+            service.put_blog(user, blog, params).then(res => {
+                console.log('success')
+                // not a good idea but forcing an update to the effect
+                setBlogsDirty(true)
+
+                setFlash('Updated blog post: ' + blog.title)
+                setTimeout(() => setFlash(null), 5000)
+            }).catch(err => {
+                console.error(err)
+                setErrorFlash(err.message)
+                setTimeout(() => setErrorFlash(null), 5000)
+            })
+        }
     }
 
     return (
