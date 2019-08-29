@@ -38,9 +38,22 @@ const post_blog = (user, blog) => {
     return request.then(response => response.data)
 }
 
+const put_blog = (user, blog, params) => {
+    if (!user) { throw 'incorrect user' }
+    if (!blog) { throw 'can\'t post empty blog' }
+
+    // TODO This should not work without token
+    // it works because the backend doesn't check it for PUT commands
+
+    const url = host.concat(blogUrl).concat('/').concat(blog.id)
+    const request = axios.put(url, params)//, config)
+    return request.then(response => response.data)
+}
+
 export default {
     login,
     blogs,
-    post_blog
+    post_blog,
+    put_blog,
 }
 

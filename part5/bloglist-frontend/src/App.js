@@ -31,6 +31,7 @@ const App = () => {
     const [ errorFlash, setErrorFlash] = useState(null)
     //
     const [ postBlogVisible, setPostBlogVisible ] = useState(false)
+    const [ blogsDirty, setBlogsDirty ] = useState(false)
 
     const handleLogin = async (event) => {
         event.preventDefault()
@@ -97,8 +98,9 @@ const App = () => {
     useEffect( () => {
         service.blogs().then( res => {
             setBlogs(res)
+            setBlogsDirty(false)
         })
-    }, [user, newTitle]) // TODO don't like this, but otherwise the event handler doesn't work
+    }, [user, newTitle, blogsDirty]) // TODO don't like this, but otherwise the event handler doesn't work
 
     const loginForm = () => {
         return (
@@ -148,6 +150,20 @@ const App = () => {
         )
     }
 
+    const handleBlogChange = (blog, params) => {
+        service.put_blog(user, blog, params).then(res => {
+            console.log('success')
+            // not a good idea but forcing an update to the effect
+            setBlogsDirty(true)
+
+            setFlash('Updated blog post: ' + blog.title)
+            setTimeout(() => setFlash(null), 5000)
+        }).catch(err => {
+            console.error(err)
+            setErrorFlash(err.message)
+            setTimeout(() => setErrorFlash(null), 5000)
+        })
+    }
 
     return (
         <div>
@@ -162,7 +178,7 @@ const App = () => {
                 { !postBlogVisible &&
                     <button onClick={() => setPostBlogVisible(true)}>create new</button>
                 }
-                {blogs.map(b => <Blog key={b.id} blog={b} /> )}
+                {blogs.map(b => <Blog key={b.id} blog={b} blogChangedCb={handleBlogChange} /> )}
             </div>
         }
         </div>

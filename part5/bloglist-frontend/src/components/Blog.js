@@ -6,7 +6,7 @@
  */
 import React, { useState } from 'react'
 
-const Blog = ({ blog }) => {
+const Blog = ({ blog, blogChangedCb }) => {
     const blogStyle = {
         paddingTop: 10,
         paddingLeft: 2,
@@ -21,10 +21,11 @@ const Blog = ({ blog }) => {
         setExpand(!expand)
     }
 
-    const handleLikeButton = (event) => {
+    const handleLikeButton = (event, blog) => {
         event.preventDefault()
         event.stopPropagation()
-        console.error('Like button not implemented')
+
+        blogChangedCb(blog, { likes: blog.likes+1 })
     }
 
     const name = blog.user ? blog.user.name : 'unknown'
@@ -35,7 +36,7 @@ const Blog = ({ blog }) => {
             <div>
             <p>{blog.title} by {blog.author}</p>
             <p>{blog.url}</p>
-            <p>{blog.likes} likes <button onClick={handleLikeButton}>like</button></p>
+            <p>{blog.likes} likes <button onClick={(e) => handleLikeButton(e, blog)}>like</button></p>
             <p>added by {name}</p>
             </div>
         }
