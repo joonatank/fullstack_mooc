@@ -10,6 +10,7 @@ import Flash from './components/Flash'
 import service from './service'
 import './App.css'
 import * as _ from 'lodash'
+import { useField } from './hooks'
 
 const STORAGE_USER = 'loggedBloglistappUser'
 
@@ -21,8 +22,9 @@ const User = ({ user, logoutCb }) => (
 )
 
 const App = () => {
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
+    const username = useField('text')
+    const password = useField('password')
+
     const [user, setUser] = useState(null)
     const [blogs, setBlogs] = useState([])
     const [newTitle, setNewTitle] = useState('')
@@ -39,14 +41,12 @@ const App = () => {
         event.preventDefault()
 
         try {
-            const u = await service.login({ username, password })
+            const u = await service.login({ username: username.value, password: password.value })
 
             window.localStorage.setItem(
                 STORAGE_USER, JSON.stringify(u)
             )
             setUser(u)
-            setUsername('')
-            setPassword('')
 
             setFlash('Logged in: ' + u.name)
             setTimeout(() => setFlash(null), 5000)
@@ -56,10 +56,11 @@ const App = () => {
             setErrorFlash('Wrong credentials')
             setTimeout(() => setErrorFlash(null), 5000)
         }
+        username.reset()
+        password.reset()
     }
 
     const handleLogout = (user) => {
-        console.log('handleLogout: ', user)
         setUser(null)
         window.localStorage.removeItem(STORAGE_USER)
 
@@ -110,15 +111,11 @@ const App = () => {
             <form onSubmit={handleLogin}>
                 <div>
                     username
-                    <input type='text' value={username} name='Username'
-                        onChange={ ({ target }) => setUsername(target.value) }
-                    />
+                    <input {...username} reset='' />
                 </div>
                 <div>
                     password
-                    <input type='password' value={password} name='Password'
-                        onChange={ ({ target }) => setPassword(target.value) }
-                    />
+                    <input {...password} reset='' />
                 </div>
                 <button type='submit'>login</button>
             </form>
