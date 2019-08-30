@@ -18,7 +18,7 @@ describe('notifcation reducer', () => {
         freeze(state)
 
         const msg = 'flash message'
-        const newState = reducer(state, setFlash(msg))
+        const newState = reducer(state, { type: 'SET_FLASH', msg: msg } )
 
         expect(newState).toBe(msg)
     })

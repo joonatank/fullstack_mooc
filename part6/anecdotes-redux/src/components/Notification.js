@@ -17,7 +17,6 @@ const Notification = (props) => {
     }
 
     const note = props.notification
-    setTimeout(() => props.setFlash(''), 5000)
 
     return (
         <div style={style}>

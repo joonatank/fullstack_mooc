@@ -5,7 +5,7 @@
  *  Exercise 6.3 - 6.8
  */
 import freeze from 'deep-freeze'
-import reducer, { createDote, vote } from './anecdoteReducer'
+import reducer from './anecdoteReducer'
 
 const data = [
     {
@@ -53,7 +53,8 @@ describe('anecdote reducer', () => {
         freeze(state)
 
         const text = 'Was a fine and pretty day.'
-        const newState = reducer(state, createDote({ content: text, id: 100, votes: 0 }))
+        const action = { type: 'DOTE_NEW', dote: { content: text, id: 100, votes: 0 } }
+        const newState = reducer(state, action)
 
         expect(newState.length).toBe(state.length + 1)
         expect(newState.filter(x => x.content === text).length).toBe(1)
@@ -75,47 +76,17 @@ describe('anecdote reducer', () => {
         expect(newState.length).toBe(data.length)
         return newState
     }
+
     test('vote first document', () => {
         const state = init(reducer())
         freeze(state)
 
-        const id = state[0].id
-        const action = vote(id)
+        const dote = state[0]
+        const action = { type: 'VOTE', dote: { ...dote, votes: dote.votes+1 } }
 
         const newState = reducer(state, action)
 
-        check_votes(newState, id, 1)
+        check_votes(newState, dote.id, 1)
     })
 
-    test('vote fourth document three times', () => {
-        const state = init(reducer())
-        freeze(state)
-
-        const id = state[3].id
-        const action = vote(id)
-
-        const state2 = reducer(state, action)
-        const state3 = reducer(state2, action)
-        const newState = reducer(state3, action)
-
-        check_votes(newState, id, 3)
-    })
-
-    test('mixed voting', () => {
-        const state = init(reducer())
-        freeze(state)
-
-        const id = state[1].id
-        const id2 = state[2].id
-        const id3 = state[3].id
-
-        const state2 = reducer(state, vote(id))
-        const state3 = reducer(state2, vote(id2))
-        const state4 = reducer(state3, vote(id2))
-        const newState = reducer(state4, vote(id3))
-
-        check_votes(newState, id, 1)
-        check_votes(newState, id2, 2)
-        check_votes(newState, id3, 1)
-    })
 })

@@ -16,9 +16,14 @@ const reducer = (state = initialState, action = { type: '' }) => {
     }
 }
 
-const setFlash = (text) => {
-    return { type: 'SET_FLASH', msg: text }
+export const setFlash = (text, time) => {
+    return dispatch => {
+        setTimeout( () => {
+            dispatch({ type: 'SET_FLASH', msg: '' })
+        }, time * 1000)
+
+        return dispatch({ type: 'SET_FLASH', msg: text })
+    }
 }
 
-export { setFlash }
 export default reducer

@@ -16,10 +16,8 @@ const AnecdoteForm = (props) => {
     const handleCreate = async (event) => {
         event.preventDefault()
 
-        const dote = await service.createNew(newAnecdote)
-
-        props.createDote(dote)
-        props.setFlash(`${dote.content} created.`)
+        await props.createDote(newAnecdote)
+        props.setFlash(`${newAnecdote} created.`, 5)
         setNewAnecdote('')
     }
 

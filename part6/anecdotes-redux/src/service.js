@@ -2,7 +2,7 @@
  *  2019-08-30
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 6.16 - 6.17
+ *  Exercise 6.16 - 6.20
  */
 import axios from 'axios'
 
@@ -17,4 +17,9 @@ const createNew = (content) => {
     return axios.post(baseUrl, dote).then(res => res.data)
 }
 
-export default { getAll, createNew }
+const update = (dote) => {
+    const url = baseUrl.concat('/').concat(dote.id)
+    return axios.put(url, dote).then(res => res.data)
+}
+
+export default { getAll, createNew, update }
