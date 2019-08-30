@@ -10,16 +10,13 @@ import { vote } from '../reducers/anecdoteReducer'
 import _ from 'lodash'
 
 const AnecdoteList = (props) => {
-    const anecdotes = props.anecdotes
-    const filter = props.filter
-
     const handleVote = (id) => {
         props.vote(id)
     }
 
     return (
         <div>
-            {_.orderBy(anecdotes.filter(x => x.content.includes(filter)), ['votes'], ['desc'])
+            {props.anecdotes
                 .map(anecdote =>
                     <div key={anecdote.id}>
                         <div>
@@ -36,9 +33,9 @@ const AnecdoteList = (props) => {
 }
 
 const mapStateToProps = (state) => {
+    const xs = state.anecdotes.filter(x => x.content.includes(state.filter))
     return {
-        anecdotes: state.anecdotes,
-        filter: state.filter
+        anecdotes: _.orderBy(xs, ['votes'], ['desc'])
     }
 }
 
