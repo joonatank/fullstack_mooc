@@ -2,9 +2,10 @@
  *  2019-08-30
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 6.3 - 6.8
+ *  Exercise 6.3 - 6.14
  */
 import React, { useState } from 'react'
+import { connect } from 'react-redux'
 import { create } from '../reducers/anecdoteReducer'
 import { set } from '../reducers/notificationReducer'
 
@@ -14,8 +15,8 @@ const AnecdoteForm = (props) => {
     const handleCreate = (event) => {
         event.preventDefault()
 
-        props.store.dispatch(create(newAnecdote))
-        props.store.dispatch(set(`${newAnecdote} created.`))
+        props.create(newAnecdote)
+        props.set(`${newAnecdote} created.`)
         setNewAnecdote('')
     }
 
@@ -35,4 +36,14 @@ const AnecdoteForm = (props) => {
     )
 }
 
-export default AnecdoteForm
+const mapDispatchToProps = {
+    create,
+    set,
+}
+
+const ConnectedAnecdoteForm = connect(
+    null,
+    mapDispatchToProps
+)(AnecdoteForm)
+
+export default ConnectedAnecdoteForm

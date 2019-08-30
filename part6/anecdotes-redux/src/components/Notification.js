@@ -2,9 +2,10 @@
  *  2019-08-30
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 6.9
+ *  Exercise 6.3 - 6.14
  */
 import React from 'react'
+import { connect } from 'react-redux'
 
 import { set } from '../reducers/notificationReducer'
 
@@ -15,8 +16,8 @@ const Notification = (props) => {
         borderWidth: 1
     }
 
-    const note = props.store.getState().notification
-    setTimeout(() => props.store.dispatch(set('')), 5000)
+    const note = props.notification
+    setTimeout(() => props.set(''), 5000)
 
     return (
         <div style={style}>
@@ -25,4 +26,19 @@ const Notification = (props) => {
     )
 }
 
-export default Notification
+const mapStateToProps = (state) => {
+    return {
+        notification: state.notification
+    }
+}
+
+const mapDispatchToProps = {
+    set,
+}
+
+const ConnectedNotification= connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(Notification)
+
+export default ConnectedNotification

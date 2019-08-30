@@ -2,7 +2,7 @@
  *  2019-08-30
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 6.3 - 6.8
+ *  Exercise 6.3 - 6.14
  */
 import React from 'react'
 import AnecdoteForm from './components/AnecdoteForm'
@@ -14,10 +14,10 @@ const App = (props) => {
     return (
         <div>
             <h2>Anecdotes</h2>
-            <Filter store={props.store} />
-            <Notification store={props.store} />
-            <AnecdoteList store={props.store} />
-            <AnecdoteForm store={props.store} />
+            <Notification />
+            <Filter />
+            <AnecdoteList />
+            <AnecdoteForm />
         </div>
     )
 }

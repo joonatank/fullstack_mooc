@@ -2,18 +2,19 @@
  *  2019-08-30
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 6.3 - 6.8
+ *  Exercise 6.3 - 6.14
  */
 import React from 'react'
+import { connect } from 'react-redux'
 import { vote } from '../reducers/anecdoteReducer'
 import _ from 'lodash'
 
 const AnecdoteList = (props) => {
-    const anecdotes = props.store.getState().anecdotes
-    const filter = props.store.getState().filter
+    const anecdotes = props.anecdotes
+    const filter = props.filter
 
     const handleVote = (id) => {
-        props.store.dispatch(vote(id))
+        props.vote(id)
     }
 
     return (
@@ -34,4 +35,20 @@ const AnecdoteList = (props) => {
     )
 }
 
-export default AnecdoteList
+const mapStateToProps = (state) => {
+    return {
+        anecdotes: state.anecdotes,
+        filter: state.filter
+    }
+}
+
+const mapDispatchToProps = {
+    vote,
+}
+
+const ConnectedAnecdotes = connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(AnecdoteList)
+
+export default ConnectedAnecdotes
