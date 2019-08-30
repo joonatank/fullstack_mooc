@@ -9,7 +9,8 @@ import { vote } from '../reducers/anecdoteReducer'
 import _ from 'lodash'
 
 const AnecdoteList = (props) => {
-    const anecdotes = props.store.getState()
+    const anecdotes = props.store.getState().anecdotes
+    const filter = props.store.getState().filter
 
     const handleVote = (id) => {
         props.store.dispatch(vote(id))
@@ -17,16 +18,17 @@ const AnecdoteList = (props) => {
 
     return (
         <div>
-            {_.orderBy(anecdotes, ['votes'], ['desc']).map(anecdote =>
-                <div key={anecdote.id}>
-                    <div>
-                        {anecdote.content}
+            {_.orderBy(anecdotes.filter(x => x.content.includes(filter)), ['votes'], ['desc'])
+                .map(anecdote =>
+                    <div key={anecdote.id}>
+                        <div>
+                            {anecdote.content}
+                        </div>
+                        <div>
+                            has {anecdote.votes}
+                            <button onClick={() => handleVote(anecdote.id)}>vote</button>
+                        </div>
                     </div>
-                    <div>
-        has {anecdote.votes}
-                        <button onClick={() => handleVote(anecdote.id)}>vote</button>
-                    </div>
-                </div>
             )}
         </div>
     )

@@ -6,6 +6,7 @@
  */
 import React, { useState } from 'react'
 import { create } from '../reducers/anecdoteReducer'
+import { set } from '../reducers/notificationReducer'
 
 const AnecdoteForm = (props) => {
     const [ newAnecdote, setNewAnecdote ] = useState('')
@@ -14,6 +15,7 @@ const AnecdoteForm = (props) => {
         event.preventDefault()
 
         props.store.dispatch(create(newAnecdote))
+        props.store.dispatch(set(`${newAnecdote} created.`))
         setNewAnecdote('')
     }
 
