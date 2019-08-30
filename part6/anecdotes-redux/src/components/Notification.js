@@ -7,7 +7,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 
-import { set } from '../reducers/notificationReducer'
+import { setFlash } from '../reducers/notificationReducer'
 
 const Notification = (props) => {
     const style = {
@@ -17,7 +17,7 @@ const Notification = (props) => {
     }
 
     const note = props.notification
-    setTimeout(() => props.set(''), 5000)
+    setTimeout(() => props.setFlash(''), 5000)
 
     return (
         <div style={style}>
@@ -33,7 +33,7 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = {
-    set,
+    setFlash,
 }
 
 const ConnectedNotification= connect(

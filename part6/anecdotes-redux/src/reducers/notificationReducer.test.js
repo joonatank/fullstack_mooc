@@ -5,7 +5,7 @@
  *  Exercise 6.3 - 6.8
  */
 import freeze from 'deep-freeze'
-import reducer, { get, set } from './notificationReducer'
+import reducer, { setFlash } from './notificationReducer'
 
 describe('notifcation reducer', () => {
     test('initial state is empty', () => {
@@ -18,18 +18,7 @@ describe('notifcation reducer', () => {
         freeze(state)
 
         const msg = 'flash message'
-        const newState = reducer(state, set(msg))
-
-        expect(newState).toBe(msg)
-    })
-
-    test('get is same as previous set', () => {
-        const state = reducer()
-        freeze(state)
-
-        const msg = 'flash message'
-        const state2 = reducer(state, set(msg))
-        const newState = reducer(state2, get())
+        const newState = reducer(state, setFlash(msg))
 
         expect(newState).toBe(msg)
     })

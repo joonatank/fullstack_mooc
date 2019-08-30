@@ -16,13 +16,9 @@ const reducer = (state = initialState, action = { type: '' }) => {
     }
 }
 
-const set = (text) => {
+const setFlash = (text) => {
     return { type: 'SET_FLASH', msg: text }
 }
 
-const get = () => {
-    return { type: '' }
-}
-
-export { set, get }
+export { setFlash }
 export default reducer

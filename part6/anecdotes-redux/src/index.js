@@ -2,13 +2,14 @@
  *  2019-08-30
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 6.3 - 6.14
+ *  Exercise 6.3 - 6.16
  */
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { createStore, combineReducers } from 'redux'
 import { Provider } from 'react-redux'
 import App from './App'
+import service from './service'
 
 import nReducer from './reducers/notificationReducer'
 import aReducer from './reducers/anecdoteReducer'
@@ -21,6 +22,10 @@ const reducer = combineReducers({
 })
 
 const store = createStore(reducer)
+
+service.getAll().then(anecdotes => {
+    store.dispatch({ type: 'DOTE_INIT', dotes: anecdotes })
+})
 
 const render = () => {
     ReactDOM.render(

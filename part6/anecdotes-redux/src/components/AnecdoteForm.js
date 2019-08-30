@@ -6,17 +6,20 @@
  */
 import React, { useState } from 'react'
 import { connect } from 'react-redux'
-import { create } from '../reducers/anecdoteReducer'
-import { set } from '../reducers/notificationReducer'
+import { createDote } from '../reducers/anecdoteReducer'
+import { setFlash } from '../reducers/notificationReducer'
+import service from '../service'
 
 const AnecdoteForm = (props) => {
     const [ newAnecdote, setNewAnecdote ] = useState('')
 
-    const handleCreate = (event) => {
+    const handleCreate = async (event) => {
         event.preventDefault()
 
-        props.create(newAnecdote)
-        props.set(`${newAnecdote} created.`)
+        const dote = await service.createNew(newAnecdote)
+
+        props.createDote(dote)
+        props.setFlash(`${dote.content} created.`)
         setNewAnecdote('')
     }
 
@@ -37,8 +40,8 @@ const AnecdoteForm = (props) => {
 }
 
 const mapDispatchToProps = {
-    create,
-    set,
+    createDote,
+    setFlash,
 }
 
 const ConnectedAnecdoteForm = connect(
