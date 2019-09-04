@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from 'react'
 import Blog from './components/Blog'
 import Flash from './components/Flash'
+import NewBlogForm from './components/NewBlogForm'
 import service from './service'
 import './App.css'
 import * as _ from 'lodash'
@@ -27,9 +28,6 @@ const App = () => {
 
     const [user, setUser] = useState(null)
     const [blogs, setBlogs] = useState([])
-    const [newTitle, setNewTitle] = useState('')
-    const [newAuthor, setNewAuthor] = useState('')
-    const [newUrl, setNewUrl] = useState('')
     //
     const [ flash, setFlash] = useState(null)
     const [ errorFlash, setErrorFlash] = useState(null)
@@ -53,7 +51,16 @@ const App = () => {
 
         } catch(error) {
             console.error('login error: ', error.message)
-            setErrorFlash('Wrong credentials')
+            if (error.message === 'Network Error') {
+                setErrorFlash('Server connection failed.')
+            }
+            else if (error.message.slice(-3) === '401') {
+                setErrorFlash('Wrong credentials')
+            }
+            else {
+                console.log(error.message.slice(-3))
+                setErrorFlash(error.toString())
+            }
             setTimeout(() => setErrorFlash(null), 5000)
         }
         username.reset()
@@ -68,25 +75,23 @@ const App = () => {
         setTimeout(() => setFlash(null), 5000)
     }
 
-    const handleNewBlog = (event) => {
+    const handleNewBlog = (event, { newTitle, newAuthor, newUrl }) => {
         event.preventDefault()
         const params = { title: newTitle, author: newAuthor, url: newUrl }
         console.log('handleNewBlog: submitted', params)
 
-        service.post_blog(user, params).then(res => {
+        return service.post_blog(user, params).then(res => {
             console.log('post blog: ', res)
-
-            setNewTitle('')
-            setNewAuthor('')
-            setNewUrl('')
 
             setFlash('a new blog: ' + params.title + ' by ' + params.author + ' added')
             setTimeout(() => setFlash(null), 5000)
+            return true
         }).catch((err) => {
             console.error('post blog failed with error: ', err)
 
             setErrorFlash('POST blog failed')
             setTimeout(() => setErrorFlash(null), 5000)
+            return false
         })
     }
 
@@ -104,7 +109,7 @@ const App = () => {
             setBlogs(b)
             setBlogsDirty(false)
         })
-    }, [user, newTitle, blogsDirty]) // TODO don't like this, but otherwise the event handler doesn't work
+    }, [user, blogsDirty]) // TODO don't like this, but otherwise the event handler doesn't work
 
     const loginForm = () => {
         return (
@@ -118,34 +123,6 @@ const App = () => {
                     <input {...password} reset='' />
                 </div>
                 <button type='submit'>login</button>
-            </form>
-        )
-    }
-
-    const newBlogForm = () => {
-        return (
-            <form onSubmit={handleNewBlog}>
-                <h2>Create new blog link</h2>
-                <div>
-                    title
-                    <input type='text' value={newTitle} name='title'
-                        onChange={ ({ target }) => setNewTitle(target.value) }
-                    />
-                </div>
-                <div>
-                    author
-                    <input type='text' value={newAuthor} name='author'
-                        onChange={ ({ target }) => setNewAuthor(target.value) }
-                    />
-                </div>
-                <div>
-                    url
-                    <input type='text' value={newUrl} name='url'
-                        onChange={ ({ target }) => setNewUrl(target.value) }
-                    />
-                </div>
-                <button type='submit'>create</button>
-                <button onClick={() => setPostBlogVisible(false)}>cancel</button>
             </form>
         )
     }
@@ -174,6 +151,7 @@ const App = () => {
             })
         }
         else {
+            console.log('Should send PUT message')
             service.put_blog(user, blog, params).then( () => {
                 console.log('success')
                 // not a good idea but forcing an update to the effect
@@ -198,7 +176,9 @@ const App = () => {
                 <div>
                     <User user={user} logoutCb={handleLogout} />
                     <h1>Blogs</h1>
-                    { postBlogVisible && newBlogForm()}
+                    { postBlogVisible && <NewBlogForm visibleCb={setPostBlogVisible}
+                        newBlogCb={handleNewBlog}
+                        /> }
                     { !postBlogVisible &&
                         <button onClick={() => setPostBlogVisible(true)}>create new</button>
                     }
