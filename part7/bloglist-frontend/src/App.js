@@ -14,15 +14,14 @@ import { connect } from 'react-redux'
 
 import Blog from './components/Blog'
 import Flash from './components/Flash'
-import NewBlogForm from './components/NewBlogForm'
 import LoginForm from './components/LoginForm'
 import Users from './components/Users'
+import BlogView from './components/BlogView'
 import './App.css'
 
 import { initialiseBlogs, deleteBlogPost, changeBlogPost } from './reducers/blogReducer'
 import { logout, loginFromStorage } from './reducers/loginReducer'
 import { setFlash } from './reducers/flashReducer'
-import { showNew } from './reducers/uiReducer'
 import { initialiseUsers } from './reducers/usersReducer'
 
 const User = ({ user }) => {
@@ -38,15 +37,29 @@ const User = ({ user }) => {
     )
 }
 
+const LoginHeader = ({ user, logoutCb }) => {
+    return (
+        <div>
+            <p> {user.name} loggged in
+                <button onClick={() => logoutCb()}>logout</button>
+            </p>
+        </div>
+    )
+}
+
 const Menu = (props) => {
 
     const users = props.users
+    const blogs = props.blogs
 
     return (
         <div>
             <Router>
                 <Route exact path='/' render={() => <Redirect to="/blogs" />} />
-                <Route exact path='/blogs' render={() => props.blogs()} />
+                <Route exact path='/blogs' render={() => <BlogView />} />
+                <Route exact path='/blogs/:id' render={({ match }) =>
+                    <Blog expanded={true} blog={blogs.filter(x => x.id === match.params.id)[0]} />}
+                />
                 <Route exact path='/users' render={() => <Users users={users} />} />
                 <Route exact path='/users/:id' render={({ match }) =>
                     <User user={users.filter(x => x.id === match.params.id)[0]} />}
@@ -64,28 +77,7 @@ const App = (props) => {
         props.initialiseUsers()
     }, [])
 
-    const blogView = () => {
-        return (
-            <div>
-            { postBlogVisible && <NewBlogForm /> }
-            { !postBlogVisible && <button onClick={props.showNew}>create new</button> }
-            { props.blogs.map(b => <Blog key={b.id} blog={b} />) }
-            </div>
-        )
-    }
 
-    const LoginHeader = ({ user, logoutCb }) => {
-        return (
-            <div>
-                <p> {user.name} loggged in
-                    <button onClick={() => logoutCb()}>logout</button>
-                </p>
-            </div>
-        )
-    }
-
-
-    const postBlogVisible = props.ui.newVisible
     return (
         <div>
             <h1>Blogs</h1>
@@ -94,7 +86,7 @@ const App = (props) => {
             {props.user !== null &&
                 <div>
                     <LoginHeader user={props.user} logoutCb={props.logout} />
-                    <Menu blogs={blogView} users={props.users} />
+                    <Menu users={props.users} blogs={props.blogs} />
                 </div>
             }
         </div>
@@ -118,7 +110,6 @@ const funcmap = {
     setFlash,
     deleteBlogPost,
     changeBlogPost,
-    showNew,
 }
 
 export default connect(

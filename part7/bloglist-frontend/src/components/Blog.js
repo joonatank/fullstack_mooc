@@ -4,8 +4,9 @@
  *  Helsinki Fullstack Mooc
  *  Exercise 7.4 - 7.6
  */
-import React, { useState } from 'react'
+import React from 'react'
 import { connect } from 'react-redux'
+import { Link } from 'react-router-dom'
 
 import { changeBlogPost, deleteBlogPost } from '../reducers/blogReducer'
 
@@ -19,10 +20,8 @@ const Blog = (props) => {
         marginBottom: 5
     }
 
-    const [ expand, setExpand ] = useState(false)
-
-    const handleBlogClick = () => {
-        setExpand(!expand)
+    if (props.blog === undefined) {
+        return null
     }
 
     const handleLikeButton = (event, blog) => {
@@ -46,19 +45,23 @@ const Blog = (props) => {
     const username = blog.user ? blog.user.username : 'unknown'
 
     return (
-        <div style={blogStyle} onClick={handleBlogClick}>
-            { expand &&
+        <div style={blogStyle}>
+            { props.expanded &&
                 <div>
-                    <p>{blog.title} by {blog.author}</p>
-                    <p>{blog.url}</p>
-                    <p>{blog.likes} likes <button onClick={(e) => handleLikeButton(e, blog)}>like</button></p>
+                    <h2>{blog.title} by {blog.author}</h2>
+                    <Link to={blog.url}>{blog.url}</Link>
+                    <p>{blog.likes} likes
+                        <button onClick={(e) => handleLikeButton(e, blog)}>like</button>
+                    </p>
                     <p>added by {name}</p>
                     {username === props.user.username &&
                         <button onClick={(e) => handleRemoveButton(e, blog)}>remove</button>
                     }
                 </div>
             }
-            { !expand && <p>{blog.title} by {blog.author}</p> }
+            { !props.expanded &&
+                    <Link to={`/blogs/${blog.id}`}>{blog.title} by {blog.author}</Link>
+            }
         </div>
     )
 }
