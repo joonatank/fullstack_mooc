@@ -13,13 +13,15 @@ import { Provider } from 'react-redux'
 import thunk from 'redux-thunk'
 
 import blogReducer from './reducers/blogReducer'
-import userReducer from './reducers/loginReducer'
+import usersReducer from './reducers/usersReducer'
+import loginReducer from './reducers/loginReducer'
 import uiReducer from './reducers/uiReducer'
 import flashReducer from './reducers/flashReducer'
 
 const reducer = combineReducers({
     blogs: blogReducer,
-    user: userReducer,
+    users: usersReducer,
+    user: loginReducer,
     ui: uiReducer,
     flash: flashReducer,
 })

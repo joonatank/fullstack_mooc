@@ -18,6 +18,13 @@ const login = (cred) => {
     return request.then(response => response.data)
 }
 
+const users = () => {
+    const url = host.concat('/api/users')
+    // TODO add token?
+    const request = axios.get(url)
+    return request.then(response => response.data)
+}
+
 const blogs = () => {
     const url = host.concat(blogUrl)
     // TODO add token?
@@ -68,6 +75,7 @@ export default {
     blogs,
     post_blog,
     put_blog,
-    del_blog
+    del_blog,
+    users,
 }
 
