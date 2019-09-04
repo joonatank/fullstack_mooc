@@ -25,12 +25,15 @@ import { setFlash } from './reducers/flashReducer'
 import { showNew } from './reducers/uiReducer'
 import { initialiseUsers } from './reducers/usersReducer'
 
-const User = ({ user, logoutCb }) => {
+const User = ({ user }) => {
+    if (user === undefined) {
+        return null
+    }
     return (
         <div>
-            <p> {user.name} loggged in
-                <button onClick={() => logoutCb()}>logout</button>
-            </p>
+            <h1>{user.name}</h1>
+            <h3>added blogs</h3>
+            <ul> {user.blogs.map(x => <li key={x.id}>{x.title}</li>)} </ul>
         </div>
     )
 }
@@ -44,10 +47,13 @@ const Menu = (props) => {
             <Router>
                 <Route exact path='/' render={() => <Redirect to="/blogs" />} />
                 <Route exact path='/blogs' render={() => props.blogs()} />
-                <Route path='/users' render={() => <Users users={users} />} />
+                <Route exact path='/users' render={() => <Users users={users} />} />
+                <Route exact path='/users/:id' render={({ match }) =>
+                    <User user={users.filter(x => x.id === match.params.id)[0]} />}
+                />
             </Router>
         </div>
-      )
+    )
 }
 
 const App = (props) => {
@@ -61,7 +67,6 @@ const App = (props) => {
     const blogView = () => {
         return (
             <div>
-            <h1>Blogs</h1>
             { postBlogVisible && <NewBlogForm /> }
             { !postBlogVisible && <button onClick={props.showNew}>create new</button> }
             { props.blogs.map(b => <Blog key={b.id} blog={b} />) }
@@ -69,14 +74,26 @@ const App = (props) => {
         )
     }
 
+    const LoginHeader = ({ user, logoutCb }) => {
+        return (
+            <div>
+                <p> {user.name} loggged in
+                    <button onClick={() => logoutCb()}>logout</button>
+                </p>
+            </div>
+        )
+    }
+
+
     const postBlogVisible = props.ui.newVisible
     return (
         <div>
+            <h1>Blogs</h1>
             <Flash />
             {props.user === null && <LoginForm />}
             {props.user !== null &&
                 <div>
-                    <User user={props.user} logoutCb={props.logout} />
+                    <LoginHeader user={props.user} logoutCb={props.logout} />
                     <Menu blogs={blogView} users={props.users} />
                 </div>
             }
