@@ -1,3 +1,11 @@
+.navbar {
+    background: lightgrey;
+}
+
+.menuItem {
+    padding: 20px;
+}
+
 .error {
     color: red;
     background: lightgrey;

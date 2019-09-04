@@ -7,7 +7,7 @@
 import React, { useEffect } from 'react'
 import {
   BrowserRouter as Router,
-  Route, Redirect
+  Route, Redirect, Link
 } from 'react-router-dom'
 
 import { connect } from 'react-redux'
@@ -37,37 +37,11 @@ const User = ({ user }) => {
     )
 }
 
-const LoginHeader = ({ user, logoutCb }) => {
-    return (
-        <div>
-            <p> {user.name} loggged in
-                <button onClick={() => logoutCb()}>logout</button>
-            </p>
-        </div>
-    )
-}
-
-const Menu = (props) => {
-
-    const users = props.users
-    const blogs = props.blogs
-
-    return (
-        <div>
-            <Router>
-                <Route exact path='/' render={() => <Redirect to="/blogs" />} />
-                <Route exact path='/blogs' render={() => <BlogView />} />
-                <Route exact path='/blogs/:id' render={({ match }) =>
-                    <Blog expanded={true} blog={blogs.filter(x => x.id === match.params.id)[0]} />}
-                />
-                <Route exact path='/users' render={() => <Users users={users} />} />
-                <Route exact path='/users/:id' render={({ match }) =>
-                    <User user={users.filter(x => x.id === match.params.id)[0]} />}
-                />
-            </Router>
-        </div>
-    )
-}
+const LoginHeader = ({ user, logoutCb }) => (
+    <span>
+        {user.name} loggged in <button onClick={() => logoutCb()}>logout</button>
+    </span>
+)
 
 const App = (props) => {
 
@@ -77,16 +51,32 @@ const App = (props) => {
         props.initialiseUsers()
     }, [])
 
+    const users = props.users
+    const blogs = props.blogs
 
     return (
         <div>
-            <h1>Blogs</h1>
             <Flash />
             {props.user === null && <LoginForm />}
             {props.user !== null &&
                 <div>
-                    <LoginHeader user={props.user} logoutCb={props.logout} />
-                    <Menu users={props.users} blogs={props.blogs} />
+                    <Router>
+                        <div className="navbar">
+                            <Link className="menuItem" to='/blogs'>blogs</Link>
+                            <Link className="menuItem" to='/users'>users</Link>
+                            <LoginHeader user={props.user} logoutCb={props.logout} />
+                        </div>
+                        <h1>Blogs</h1>
+                        <Route exact path='/' render={() => <Redirect to="/blogs" />} />
+                        <Route exact path='/blogs' render={() => <BlogView />} />
+                        <Route exact path='/blogs/:id' render={({ match }) =>
+                            <Blog expanded={true} blog={blogs.filter(x => x.id === match.params.id)[0]} />}
+                        />
+                        <Route exact path='/users' render={() => <Users users={users} />} />
+                        <Route exact path='/users/:id' render={({ match }) =>
+                            <User user={users.filter(x => x.id === match.params.id)[0]} />}
+                        />
+                    </Router>
                 </div>
             }
         </div>
