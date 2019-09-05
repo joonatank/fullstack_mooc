@@ -1,29 +1,37 @@
+/*  Joonatan Kuosa
+ *  2019-09-04
+ *
+ *  Helsinki Fullstack Mooc
+ *  Exercise 7
+ */
 import React from 'react'
 
 import { Link } from 'react-router-dom'
 
+import { Table } from 'semantic-ui-react'
+
 const Users = ({ users }) => (
     <div>
         <h1>Users</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>blogs created</th>
-                </tr>
-            </thead>
-            <tbody>
+        <Table>
+            <Table.Header>
+                <Table.Row>
+                    <Table.HeaderCell></Table.HeaderCell>
+                    <Table.HeaderCell>blogs created</Table.HeaderCell>
+                </Table.Row>
+            </Table.Header>
+            <Table.Body>
                 {users.map(u =>
-                    <tr key={u.name}>
-                        <td>
+                    <Table.Row key={u.name}>
+                        <Table.Cell>
                             <Link to={`/users/${u.id}`}>{u.name}</Link>
-                        </td>
-                        <td>{u.blogs.length}</td>
-                    </tr>
+                        </Table.Cell>
+                        <Table.Cell>{u.blogs.length}</Table.Cell>
+                    </Table.Row>
                     )
                 }
-            </tbody>
-        </table>
+            </Table.Body>
+        </Table>
     </div>
 )
 

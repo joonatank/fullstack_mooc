@@ -7,8 +7,8 @@
  *  Flash component
  */
 import React from 'react'
-
 import { connect } from 'react-redux'
+import { Message } from 'semantic-ui-react'
 
 import { setFlash } from '../reducers/flashReducer'
 
@@ -19,11 +19,18 @@ const Flash = (props) => {
     if (msg === undefined || msg === null || msg === '') {
         return null
     }
+    else if (look === 'error') {
+        return (
+            <Message negative>
+                <p> {msg} </p>
+            </Message>
+        )
+    }
     else {
         return (
-            <div className={look}>
-                {msg}
-            </div>
+            <Message positive>
+                <p> {msg} </p>
+            </Message>
         )
     }
 }

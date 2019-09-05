@@ -2,7 +2,7 @@
  *  2019-09-04
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 7.4 - 7.6
+ *  Exercise 7.4 - 7.14
  */
 import React, { useEffect } from 'react'
 import {
@@ -19,6 +19,8 @@ import Users from './components/Users'
 import BlogView from './components/BlogView'
 import './App.css'
 
+import { Container, Button, Header, Menu, Sticky, List } from 'semantic-ui-react'
+
 import { initialiseBlogs, deleteBlogPost, changeBlogPost } from './reducers/blogReducer'
 import { logout, loginFromStorage } from './reducers/loginReducer'
 import { setFlash } from './reducers/flashReducer'
@@ -30,16 +32,22 @@ const User = ({ user }) => {
     }
     return (
         <div>
-            <h1>{user.name}</h1>
-            <h3>added blogs</h3>
-            <ul> {user.blogs.map(x => <li key={x.id}>{x.title}</li>)} </ul>
+            <Header as='h2'>{user.name}</Header>
+            <Header as='h3'>Added blogs</Header>
+            <List>
+                {user.blogs.map(b =>
+                    <List.Item>
+                        <Link to={`/blogs/${b.id}`}>{b.title}</Link>
+                    </List.Item>)
+                }
+            </List>
         </div>
     )
 }
 
 const LoginHeader = ({ user, logoutCb }) => (
     <span>
-        {user.name} loggged in <button onClick={() => logoutCb()}>logout</button>
+        {user.name} loggged in <Button onClick={() => logoutCb()}>logout</Button>
     </span>
 )
 
@@ -54,32 +62,54 @@ const App = (props) => {
     const users = props.users
     const blogs = props.blogs
 
+    const Footer = () => (
+        <Container className="footer">
+            <em>Joonatan Kuosa </em><br />
+            <em>Fullstack MOOC 2019 - Bloglist</em>
+        </Container>
+    )
+
     return (
-        <div>
-            <Flash />
-            {props.user === null && <LoginForm />}
-            {props.user !== null &&
-                <div>
-                    <Router>
-                        <div className="navbar">
-                            <Link className="menuItem" to='/blogs'>blogs</Link>
-                            <Link className="menuItem" to='/users'>users</Link>
-                            <LoginHeader user={props.user} logoutCb={props.logout} />
-                        </div>
-                        <h1>Blogs</h1>
-                        <Route exact path='/' render={() => <Redirect to="/blogs" />} />
-                        <Route exact path='/blogs' render={() => <BlogView />} />
-                        <Route exact path='/blogs/:id' render={({ match }) =>
-                            <Blog expanded={true} blog={blogs.filter(x => x.id === match.params.id)[0]} />}
-                        />
-                        <Route exact path='/users' render={() => <Users users={users} />} />
-                        <Route exact path='/users/:id' render={({ match }) =>
-                            <User user={users.filter(x => x.id === match.params.id)[0]} />}
-                        />
-                    </Router>
-                </div>
+        <Container>
+            {props.user === null &&
+                    <div>
+                        <Header as='h1'>Bloglist</Header>
+                        <Flash />
+                        <LoginForm />
+                    </div>
             }
-        </div>
+            {props.user !== null &&
+                <Router>
+                    <Sticky>
+                        <Menu inverted>
+                            <Menu.Item link>
+                                <Link className='menuItem' to='/blogs'>blogs</Link>
+                            </Menu.Item>
+                            <Menu.Item link>
+                                <Link className='menuItem' to='/users'>users</Link>
+                            </Menu.Item>
+                            <Menu.Item position='right'>
+                                <LoginHeader user={props.user} logoutCb={props.logout} />
+                            </Menu.Item>
+                        </Menu>
+                        <Flash />
+                    </Sticky>
+
+                    <Header as="h1" dividing>Blogs</Header>
+                    <Route exact path='/' render={() => <Redirect to="/blogs" />} />
+                    <Route exact path='/blogs' render={() => <BlogView />} />
+                    <Route exact path='/blogs/:id' render={({ match }) =>
+                        <Blog expanded={true} blog={blogs.filter(x => x.id === match.params.id)[0]} />}
+                    />
+                    <Route exact path='/users' render={() => <Users users={users} />} />
+                    <Route exact path='/users/:id' render={({ match }) =>
+                        <User user={users.filter(x => x.id === match.params.id)[0]} />}
+                    />
+                </Router>
+            }
+            <Footer />
+        </Container>
+
     )
 }
 

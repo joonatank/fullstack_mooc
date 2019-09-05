@@ -7,6 +7,8 @@
 import React from 'react'
 import { connect } from 'react-redux'
 
+import { Form, Button } from 'semantic-ui-react'
+
 import { useField } from '../hooks'
 import { login } from '../reducers/loginReducer'
 import { setFlash } from '../reducers/flashReducer'
@@ -26,17 +28,17 @@ const LoginForm = (props) => {
     }
 
     return (
-        <form onSubmit={handleLogin}>
-            <div>
-                username
+        <Form onSubmit={handleLogin}>
+            <Form.Field>
+                <label>username</label>
                 <input {...username} reset='' />
-            </div>
-            <div>
-                password
+            </Form.Field>
+            <Form.Field>
+                <label>password</label>
                 <input {...password} reset='' />
-            </div>
-            <button type='submit'>login</button>
-        </form>
+            </Form.Field>
+            <Button primary type='submit'>login</Button>
+        </Form>
     )
 }
 

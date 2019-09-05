@@ -4,23 +4,19 @@
  *  Helsinki Fullstack Mooc
  *  Exercise 7.4 - 7.12
  */
-import React from 'react'
+import React, { useState } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
+
+import { Container, Button, Icon, Label, Input, Comment, Header, Divider, Confirm }
+    from 'semantic-ui-react'
 
 import { changeBlogPost, deleteBlogPost, addComment } from '../reducers/blogReducer'
 import { useField } from '../hooks'
 
 const Blog = (props) => {
     const comment = useField('text')
-
-    const blogStyle = {
-        paddingTop: 10,
-        paddingLeft: 2,
-        border: 'solid',
-        borderWidth: 1,
-        marginBottom: 5
-    }
+    const [ confirmDelete, setConfirmDelete ] = useState(false)
 
     if (props.blog === undefined) {
         return null
@@ -34,12 +30,17 @@ const Blog = (props) => {
         props.changeBlogPost(props.user, blog, params)
     }
 
+    const handleConfirmCancel = () => setConfirmDelete(false)
+
     const handleRemoveButton = (event, blog) => {
         event.preventDefault()
         event.stopPropagation()
 
-        props.deleteBlogPost(props.user, blog)
+        setConfirmDelete(true)
     }
+
+    // TODO this should route out of the now deleted blog post
+    const deleteConfirmed = (blog) => props.deleteBlogPost(props.user, blog)
 
     const handleCommentButton = (event) => {
         event.preventDefault()
@@ -54,30 +55,52 @@ const Blog = (props) => {
     const name = blog.user ? blog.user.name : 'unknown'
     const username = blog.user ? blog.user.username : 'unknown'
 
+    // TODO add color to blog.author (maybe italics too)
+    // or move it to the right (or somewhat)
     return (
-        <div style={blogStyle}>
-            { props.expanded &&
+        <Container>
+            {username === props.user.username &&
                 <div>
-                    <h2>{blog.title} by {blog.author}</h2>
-                    <Link to={blog.url}>{blog.url}</Link>
-                    <p>{blog.likes} likes
-                        <button onClick={(e) => handleLikeButton(e, blog)}>like</button>
-                    </p>
-                    <p>added by {name}</p>
-                    {username === props.user.username &&
-                        <button onClick={(e) => handleRemoveButton(e, blog)}>remove</button>
-                    }
-                    <h3>comments</h3>
-                    <input {...comment} reset='' /> <button onClick={handleCommentButton}>add comment</button>
-                    <ul>
-                        {blog.comments.map(x => <li key={x}>{x}</li>)}
-                    </ul>
+                <Button floated='right' color='red'
+                    onClick={(e) => handleRemoveButton(e, blog)}>Delete
+                </Button>
+                <Confirm
+                    open={confirmDelete}
+                    onCancel={handleConfirmCancel}
+                    onConfirm={() => deleteConfirmed(blog)}
+                />
                 </div>
             }
-            { !props.expanded &&
-                    <Link to={`/blogs/${blog.id}`}>{blog.title} by {blog.author}</Link>
-            }
-        </div>
+
+            <h2>{blog.title} <small>by</small> <em>{blog.author}</em></h2>
+            <p><Link to={blog.url}>{blog.url}</Link></p>
+
+            <Button as='div' labelPosition='right'>
+                <Button color='red' onClick={(e) => handleLikeButton(e, blog)}>
+                    <Icon name='heart' />
+                    Like
+                </Button>
+                <Label as='a' basic pointing='left'>
+                    {blog.likes}
+                </Label>
+            </Button>
+
+            <Label>added by {name}</Label>
+            <Comment.Group>
+                <Header as="h3" dividing>Comments</Header>
+                {blog.comments.map(x =>
+                    <Comment>
+                        <Comment.Content>
+                            <Comment.Text><p>{x}</p></Comment.Text>
+                        </Comment.Content>
+                    </Comment>
+                )}
+                <Divider />
+                <Input {...comment} reset='' />
+                <Button onClick={handleCommentButton} content='Add Comment' icon='edit' primary />
+            </Comment.Group>
+
+        </Container>
     )
 }
 
