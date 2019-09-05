@@ -81,7 +81,7 @@ const App = (props) => {
             {props.user !== null &&
                 <Router>
                     <Sticky>
-                        <Menu inverted>
+                        <Menu inverted id="nav">
                             <Menu.Item link>
                                 <Link className='menuItem' to='/blogs'>blogs</Link>
                             </Menu.Item>

@@ -31,11 +31,11 @@ const LoginForm = (props) => {
         <Form onSubmit={handleLogin}>
             <Form.Field>
                 <label>username</label>
-                <input {...username} reset='' />
+                <input name="username" {...username} reset='' />
             </Form.Field>
             <Form.Field>
                 <label>password</label>
-                <input {...password} reset='' />
+                <input name="password" {...password} reset='' />
             </Form.Field>
             <Button primary type='submit'>login</Button>
         </Form>

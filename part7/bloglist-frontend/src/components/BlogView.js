@@ -34,7 +34,9 @@ const BlogList = ({ blogs }) => (
 const BlogView = (props) => (
     <div>
         { props.ui.newVisible && <NewBlogForm /> }
-        { !props.ui.newVisible  && <Button onClick={props.showNew}>create new</Button> }
+        { !props.ui.newVisible  &&
+                <Button id='createNewButton' onClick={props.showNew}>create new</Button>
+        }
         <BlogList blogs={props.blogs}/>
     </div>
 )
