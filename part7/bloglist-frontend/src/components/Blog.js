@@ -2,16 +2,18 @@
  *  2019-09-04
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 7.4 - 7.6
+ *  Exercise 7.4 - 7.12
  */
 import React from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
 
-import { changeBlogPost, deleteBlogPost } from '../reducers/blogReducer'
+import { changeBlogPost, deleteBlogPost, addComment } from '../reducers/blogReducer'
+import { useField } from '../hooks'
 
-// This assumes that the usernames are unique since we don't have ids here
 const Blog = (props) => {
+    const comment = useField('text')
+
     const blogStyle = {
         paddingTop: 10,
         paddingLeft: 2,
@@ -39,6 +41,14 @@ const Blog = (props) => {
         props.deleteBlogPost(props.user, blog)
     }
 
+    const handleCommentButton = (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+
+        props.addComment(props.user, blog, comment.value)
+        comment.reset()
+    }
+
     // Handle posts without users (compatibility reasons)
     const blog = props.blog
     const name = blog.user ? blog.user.name : 'unknown'
@@ -57,6 +67,11 @@ const Blog = (props) => {
                     {username === props.user.username &&
                         <button onClick={(e) => handleRemoveButton(e, blog)}>remove</button>
                     }
+                    <h3>comments</h3>
+                    <input {...comment} reset='' /> <button onClick={handleCommentButton}>add comment</button>
+                    <ul>
+                        {blog.comments.map(x => <li key={x}>{x}</li>)}
+                    </ul>
                 </div>
             }
             { !props.expanded &&
@@ -73,5 +88,5 @@ const mapStateToProps = (state) => {
 }
 
 export default connect(
-    mapStateToProps, { deleteBlogPost, changeBlogPost }
+    mapStateToProps, { deleteBlogPost, changeBlogPost, addComment }
 )(Blog)

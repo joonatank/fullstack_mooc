@@ -8,6 +8,7 @@ import * as _ from 'lodash'
 import service from '../service'
 
 import { setFlash } from './flashReducer'
+import { hideNew } from './uiReducer'
 
 // Actions
 
@@ -26,11 +27,13 @@ export const createBlog = (user, params) => {
                         url: res.url,
                         id: res.id,
                         likes: 0,
-                        user: user
+                        comments: [],
+                        user: user,
                     }
                 }
             })
-            dispatch(setFlash('a new blog: ' + params.title + ' by ' + params.author + ' added'))
+            dispatch(setFlash('A new blog: ' + params.title + ' by ' + params.author + ' added.'))
+            dispatch(hideNew())
             return true
         }).catch((err) => {
             const msg = 'post blog failed with error: ' + err
@@ -69,6 +72,22 @@ export const changeBlogPost = (user, blog, params) => {
             dispatch(setFlash(err.message, 'error'))
         })
 
+    }
+}
+export const addComment = (user, blog, comment) => {
+    return async dispatch => {
+        console.log('Should send POST message')
+        service.post_comment(user, blog, comment).then( res => {
+            dispatch(setFlash('Added a comment to blog post: ' + blog.title))
+
+            dispatch ({
+                type: 'CHANGE_POST',
+                data: { blog: { ...blog, comments: [...blog.comments, comment ] } }
+            })
+        }).catch(err => {
+            console.error(err)
+            dispatch(setFlash(err.message, 'error'))
+        })
     }
 }
 

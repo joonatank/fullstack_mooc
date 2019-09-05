@@ -2,7 +2,7 @@
  *  2019-08-29
  *
  *  Helsinki Fullstack Mooc
- *  Exercise 5.1 - 5.3
+ *  Exercise 5.1 - 7.12
  */
 import axios from 'axios'
 // TODO figure out how to configure the host/port without hard coding
@@ -57,6 +57,19 @@ const put_blog = (user, blog, params) => {
     return request.then(response => response.data)
 }
 
+const post_comment = (user, blog, comment) => {
+    const config = {
+        headers: { Authorization: 'bearer '.concat(user.token) }
+    }
+
+    const url = host.concat(blogUrl).concat('/').concat(blog.id).concat('/comments')
+    const params = { comment: comment }
+    console.log(`http post ${url}`)
+    console.log(params)
+    const request = axios.post(url, params, config)
+    return request.then(response => response.data)
+}
+
 const del_blog = (user, blog) => {
     if (!user) { throw 'incorrect user' }
     if (!blog) { throw 'can\'t post empty blog' }
@@ -77,5 +90,6 @@ export default {
     put_blog,
     del_blog,
     users,
+    post_comment,
 }
 
