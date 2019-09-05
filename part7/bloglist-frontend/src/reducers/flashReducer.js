@@ -8,17 +8,17 @@
 
 const reducer = (state = { msg: '', look: 'status' } , action ) => {
     switch (action.type) {
-        case 'SET_FLASH':
-            return action.data
-        default:
-            return state
+    case 'SET_FLASH':
+        return action.data
+    default:
+        return state
     }
 }
 
 export const setFlash = (text, look = 'status', time = 5) => {
     return dispatch => {
         setTimeout( () => {
-            dispatch({ type: 'SET_FLASH', data: {msg: '', look: look} })
+            dispatch({ type: 'SET_FLASH', data: { msg: '', look: look } })
         }, time * 1000)
 
         dispatch({

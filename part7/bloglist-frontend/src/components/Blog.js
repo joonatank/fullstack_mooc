@@ -32,7 +32,7 @@ const Blog = (props) => {
 
     const handleConfirmCancel = () => setConfirmDelete(false)
 
-    const handleRemoveButton = (event, blog) => {
+    const handleRemoveButton = (event) => {
         event.preventDefault()
         event.stopPropagation()
 
@@ -61,14 +61,14 @@ const Blog = (props) => {
         <Container>
             {username === props.user.username &&
                 <div>
-                <Button floated='right' color='red'
-                    onClick={(e) => handleRemoveButton(e, blog)}>Delete
-                </Button>
-                <Confirm
-                    open={confirmDelete}
-                    onCancel={handleConfirmCancel}
-                    onConfirm={() => deleteConfirmed(blog)}
-                />
+                    <Button floated='right' color='red'
+                        onClick={handleRemoveButton}>Delete
+                    </Button>
+                    <Confirm
+                        open={confirmDelete}
+                        onCancel={handleConfirmCancel}
+                        onConfirm={() => deleteConfirmed(blog)}
+                    />
                 </div>
             }
 
@@ -89,7 +89,7 @@ const Blog = (props) => {
             <Comment.Group>
                 <Header as="h3" dividing>Comments</Header>
                 {blog.comments.map(x =>
-                    <Comment>
+                    <Comment key={x}>
                         <Comment.Content>
                             <Comment.Text><p>{x}</p></Comment.Text>
                         </Comment.Content>

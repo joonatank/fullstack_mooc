@@ -6,8 +6,8 @@
  */
 import React, { useEffect } from 'react'
 import {
-  BrowserRouter as Router,
-  Route, Redirect, Link
+    BrowserRouter as Router,
+    Route, Redirect, Link
 } from 'react-router-dom'
 
 import { connect } from 'react-redux'
@@ -36,7 +36,7 @@ const User = ({ user }) => {
             <Header as='h3'>Added blogs</Header>
             <List>
                 {user.blogs.map(b =>
-                    <List.Item>
+                    <List.Item key={b.id}>
                         <Link to={`/blogs/${b.id}`}>{b.title}</Link>
                     </List.Item>)
                 }

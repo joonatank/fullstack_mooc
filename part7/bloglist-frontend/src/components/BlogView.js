@@ -18,15 +18,15 @@ const BlogList = ({ blogs }) => (
     // TODO add a like button
     <Table striped celled>
         <Table.Body>
-        { blogs.map(b =>
-            <Table.Row key={b.id}>
-                <Table.Cell><Link to={`/blogs/${b.id}`}>{b.title}</Link></Table.Cell>
-                <Table.Cell>by {b.author}</Table.Cell>
-                <Table.Cell>{b.likes} likes</Table.Cell>
-                <Table.Cell>{b.comments.length} comments</Table.Cell>
-            </Table.Row>
+            { blogs.map(b =>
+                <Table.Row key={b.id}>
+                    <Table.Cell><Link to={`/blogs/${b.id}`}>{b.title}</Link></Table.Cell>
+                    <Table.Cell>by {b.author}</Table.Cell>
+                    <Table.Cell>{b.likes} likes</Table.Cell>
+                    <Table.Cell>{b.comments.length} comments</Table.Cell>
+                </Table.Row>
             )
-        }
+            }
         </Table.Body>
     </Table>
 )

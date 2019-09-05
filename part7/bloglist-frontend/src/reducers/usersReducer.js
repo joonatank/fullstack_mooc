@@ -21,10 +21,10 @@ export const initialiseUsers = () => {
 const reducer = (state = [], action) => {
     switch(action.type) {
     case 'INIT_USERS':
-            return action.data.users
+        return action.data.users
     default:
-            return state
+        return state
     }
 }
 
-export default reducer;
+export default reducer

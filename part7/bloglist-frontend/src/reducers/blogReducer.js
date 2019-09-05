@@ -60,7 +60,7 @@ export const initialiseBlogs = () => {
 export const changeBlogPost = (user, blog, params) => {
     return async dispatch => {
         console.log('Should send PUT message')
-        service.put_blog(user, blog, params).then( res => {
+        service.put_blog(user, blog, params).then( () => {
 
             dispatch(setFlash('Updated blog post: ' + blog.title))
             dispatch ({
@@ -71,13 +71,12 @@ export const changeBlogPost = (user, blog, params) => {
             console.error(err)
             dispatch(setFlash(err.message, 'error'))
         })
-
     }
 }
 export const addComment = (user, blog, comment) => {
     return async dispatch => {
         console.log('Should send POST message')
-        service.post_comment(user, blog, comment).then( res => {
+        service.post_comment(user, blog, comment).then( () => {
             dispatch(setFlash('Added a comment to blog post: ' + blog.title))
 
             dispatch ({
@@ -123,9 +122,9 @@ const reducer = (state = [], action) => {
         return state.filter(x => x.id !== action.data.blog.id)
     case 'CHANGE_POST':
         return _.sortBy(
-                [ ...state.filter(x => x.id !== action.data.blog.id), action.data.blog ]
-                , ['likes', 'title']
-            ).reverse()
+            [ ...state.filter(x => x.id !== action.data.blog.id), action.data.blog ]
+            , ['likes', 'title']
+        ).reverse()
     case 'INIT_BLOGS':
         return [ ...action.data.blogs ]
     default:

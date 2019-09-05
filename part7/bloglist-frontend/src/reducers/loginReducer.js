@@ -35,7 +35,7 @@ export const login = ({ username, password }) => {
     // Send a login message
     // if success retrieve blogs and set state (blogs and user)
     return async dispatch => {
-        return service.login({ username: username, password: password}).then(user => {
+        return service.login({ username: username, password: password }).then(user => {
 
             dispatch ({
                 type: 'LOGIN',

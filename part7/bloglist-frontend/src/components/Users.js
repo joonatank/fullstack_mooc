@@ -28,7 +28,7 @@ const Users = ({ users }) => (
                         </Table.Cell>
                         <Table.Cell>{u.blogs.length}</Table.Cell>
                     </Table.Row>
-                    )
+                )
                 }
             </Table.Body>
         </Table>
