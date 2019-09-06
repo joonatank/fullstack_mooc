@@ -13,8 +13,6 @@ const Users = require('../models/user')
 
 const helpers = require('./test_helpers')
 
-// TODO test POST:ng comments (works somewhat with httpie)
-
 beforeEach(async () => {
     await Blogs.deleteAll()
     await Users.deleteAll()
@@ -26,8 +24,7 @@ afterAll(async () => {
 })
 
 const assert_blog_count = async (n) => {
-    const N = await Blogs.count()
-    expect(N).toBe(n)
+    return expect(Blogs.count()).resolves.toEqual(n)
 }
 
 const post_login = async (opts) => {
@@ -38,9 +35,11 @@ const post_login = async (opts) => {
         .then(r => r.body.token)
 }
 
+
 const USER_PASSWORD = 'good123'
+const USER_NAME = 'test'
 const createTestUser = async () => {
-    const user = { username: 'test', name: 'Test the Magnificent', password: USER_PASSWORD }
+    const user = { username: USER_NAME, name: 'Test the Magnificent', password: USER_PASSWORD }
     return await Users.create(user)
 }
 
@@ -112,17 +111,12 @@ describe('GET blog', () => {
 })
 
 describe('POST blog', () => {
-    const assert_post_count = async (n) => {
-        const Nb = await Blogs.count()
-        expect(Nb).toBe(n)
-    }
-
     test('bad post endpoint will return 404', async () => {
         await api.post('/api')
             .set('Accept', 'application/json')
             .expect(404)
 
-        await assert_post_count(0)
+        await assert_blog_count(0)
     })
 
 
@@ -138,7 +132,7 @@ describe('POST blog', () => {
     test('post without token will fail with 401', async () => {
         const newBlog = { title: 'this', author: 'that', url: 'somewhere', likes: 0 }
 
-        await assert_post_count(0)
+        await assert_blog_count(0)
 
         await api.post('/api/blogs')
             .send(newBlog)
@@ -146,7 +140,7 @@ describe('POST blog', () => {
             .expect(401)
             .then(r => expect(r.body.error).toBe('token missing or invalid'))
 
-        await assert_post_count(0)
+        await assert_blog_count(0)
     })
 
     // Need tokens for all the following tests
@@ -157,7 +151,7 @@ describe('POST blog', () => {
 
         await post_blog_fail(token, {})
 
-        await assert_post_count(0)
+        await assert_blog_count(0)
     })
 
     test('post without author will fail with 400', async () => {
@@ -168,7 +162,7 @@ describe('POST blog', () => {
 
         await post_blog_fail(token, newBlog)
 
-        await assert_post_count(0)
+        await assert_blog_count(0)
     })
 
     test('post without url will fail with 400', async () => {
@@ -179,7 +173,7 @@ describe('POST blog', () => {
 
         await post_blog_fail(token, newBlog)
 
-        await assert_post_count(0)
+        await assert_blog_count(0)
     })
 
     test('one good post is found after', async () => {
@@ -188,7 +182,7 @@ describe('POST blog', () => {
 
         const newBlog = { title: 'this', author: 'that', url: 'somewhere', likes: 0 }
 
-        await assert_post_count(0)
+        await assert_blog_count(0)
 
         // post
         await api.post('/api/blogs')
@@ -232,6 +226,108 @@ describe('POST blog', () => {
         expect(after[0].author).toBe(newBlog.author)
         expect(after[0].url).toBe(newBlog.url)
         expect(after[0].likes).toBe(0)
+    })
+})
+
+describe('POST a comment', () => {
+    test('post a comment without login should fail with 401', async () => {
+        const user = await createTestUser()
+        const COUNT = await helpers.initialiseDB(user)
+        const id = helpers.blogs[0]._id
+        const comment = 'Very nice comment.'
+
+        await api.post(`/api/blogs/${id}/comments`)
+            .send(comment)
+            .set('Accept', 'application/json')
+            .expect(401)
+    })
+
+    test('post a comment if logged should succeed', async () => {
+        const user = await createTestUser()
+        const COUNT = await helpers.initialiseDB(user)
+        const id = helpers.blogs[0]._id
+        const comment = 'Very nice comment.'
+
+        const token = await post_login({ username: USER_NAME, password: USER_PASSWORD })
+
+        await api.post(`/api/blogs/${id}/comments`)
+            .send({ comment: comment })
+            .set({ 'Authorization': 'bearer '.concat(token) })
+            .set('Accept', 'application/json')
+            .expect(201)
+
+        const after = await Blogs.get(id).lean()
+        expect(after.comments).toEqual([comment])
+    })
+
+    test('post a comment with a different user should succeed', async () => {
+        const user = await createTestUser()
+        const more_users = await create_multiple_users()
+        const blog_user = more_users[0]
+        const COUNT = await helpers.initialiseDB(blog_user)
+
+        const id = helpers.blogs[0]._id
+        const comment = 'Very nice comment.'
+
+        const token = await post_login({ username: USER_NAME, password: USER_PASSWORD })
+
+        await api.post(`/api/blogs/${id}/comments`)
+            .send({ comment: comment })
+            .set({ 'Authorization': 'bearer '.concat(token) })
+            .set('Accept', 'application/json')
+            .expect(201)
+
+        const after = await Blogs.get(id).lean()
+        expect(after.comments).toEqual([comment])
+    })
+
+    test('post an empty comment if logged should fail with 400', async () => {
+        const user = await createTestUser()
+        const COUNT = await helpers.initialiseDB(user)
+        const id = helpers.blogs[0]._id
+        const comment = ''
+
+        const token = await post_login({ username: USER_NAME, password: USER_PASSWORD })
+
+        await api.post(`/api/blogs/${id}/comments`)
+            .send({ comment: comment })
+            .set({ 'Authorization': 'bearer '.concat(token) })
+            .set('Accept', 'application/json')
+            .expect(400)
+
+        await api.post(`/api/blogs/${id}/comments`)
+            .set({ 'Authorization': 'bearer '.concat(token) })
+            .set('Accept', 'application/json')
+            .expect(400)
+
+        const after = await Blogs.get(id).lean()
+        expect(after.comments.length).toBe(0)
+    })
+
+    test('post multiple comments should succeed', async () => {
+        const user = await createTestUser()
+        const COUNT = await helpers.initialiseDB(user)
+        const id = helpers.blogs[0]._id
+        const comments = [...Array(2).keys()].map(x => `${x} Very nice comment.`)
+
+        const token = await post_login({ username: USER_NAME, password: USER_PASSWORD })
+
+        // Too hard to put this into a loop
+        await api.post(`/api/blogs/${id}/comments`)
+                .send({ comment: comments[0] })
+                .set({ 'Authorization': 'bearer '.concat(token) })
+                .set('Accept', 'application/json')
+                .expect(201)
+
+        await api.post(`/api/blogs/${id}/comments`)
+                .send({ comment: comments[1] })
+                .set({ 'Authorization': 'bearer '.concat(token) })
+                .set('Accept', 'application/json')
+                .expect(201)
+
+        const after = await Blogs.get(id).lean()
+        expect(after.comments.length).toBe(comments.length)
+        // TODO check content (use sort to arrays and compare)
     })
 })
 
@@ -298,19 +394,26 @@ describe('DELETE blog post', () => {
     })
 })
 
-// TODO PUT /api/blogs doesn't require token, it should!
 describe('PUT blog post', () => {
-    test('put a like should succeed', async () => {
-        const user = await createTestUser()
-        const COUNT = await helpers.initialiseDB(user)
+    beforeEach(async () => {
+        user = await createTestUser()
+        this.COUNT = await helpers.initialiseDB(user)
+    })
+
+    test('put a like should succeed when logged in', async () => {
+        expect.assertions(6)
+
         const first = helpers.blogs[0]
         const id = first._id
 
+        const token = await post_login({ username: USER_NAME, password: USER_PASSWORD })
+
         await api.put(`/api/blogs/${id}`)
             .send({ likes: first.likes + 1 })
+            .set({ 'Authorization': 'bearer '.concat(token) })
             .expect(200)
 
-        await assert_blog_count(COUNT)
+        await assert_blog_count(this.COUNT)
 
         const after = await Blogs.get(id)
         expect(after.author).toBe(first.author)
@@ -319,14 +422,28 @@ describe('PUT blog post', () => {
         expect(after.likes).toBe(first.likes+1)
     })
 
+    test('put a like should fail when not logged in with 401', async () => {
+        expect.assertions(2)
+
+        const first = helpers.blogs[0]
+
+        await api.put(`/api/blogs/${first._id}`)
+            .send({ likes: first.likes + 1 })
+            .expect(401)
+
+        await assert_blog_count(this.COUNT)
+    })
+
     test('put invalid id should fail', async () => {
-        const user = await createTestUser()
-        const COUNT = await helpers.initialiseDB(user)
+        expect.assertions(2)
+
+        const token = await post_login({ username: USER_NAME, password: USER_PASSWORD })
 
         await api.put('/api/blogs/invalid_id')
+            .set({ 'Authorization': 'bearer '.concat(token) })
             .expect(400)
 
-        await assert_blog_count(COUNT)
+        await assert_blog_count(this.COUNT)
     })
 })
 

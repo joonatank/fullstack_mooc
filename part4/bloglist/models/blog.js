@@ -12,7 +12,7 @@ const blogSchema = mongoose.Schema({
 	url: { type: String, required: true },
 	likes: { type: Number, default: 0 },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    comments: [{type: String }]
+    comments: [{ type: String, validate: { validator: (v) => /\w+/.test(v) } }]
 })
 
 blogSchema.set('toJSON', {
@@ -28,7 +28,7 @@ const params = ''
 
 const connect = (username, password, server_url, db_name) => {
     const url = `mongodb+srv://${username}:${password}@${server_url}/${db_name}?${params}`
-    mongoose.connect(url, { useNewUrlParser: true })
+    return mongoose.connect(url, { useNewUrlParser: true })
 }
 
 const disconnect = () => {
@@ -51,9 +51,10 @@ const save = (params, user) => {
 }
 
 const addComment = (id, comment) => {
-    // TODO check that the comment isn't empty
     return Blog.findById(id).then(blog => {
-        blog.comments = blog.comments.concat(comment)
+        // Doing this here, since it's not easy to validate sub types with Mongoose
+        const c = comment ? comment : ''
+        blog.comments = blog.comments.concat(c)
         return blog.save()
     })
 }

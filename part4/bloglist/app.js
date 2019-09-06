@@ -15,8 +15,6 @@ const loginRouter = require('./controllers/login')
 const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
 
-// TODO which API functions require tokens and which don't? document
-
 const db_name = (process.env.NODE_ENV === 'test') ?
     process.env.TEST_DATABASE :
     process.env.DEV_DATABASE
@@ -87,16 +85,17 @@ app.delete('/api/blogs/:id', async (request, response, next) => {
     }
 })
 
-// TODO doesn't require used to be logged in
-app.put('/api/blogs/:id', async (request, response) => {
+app.put('/api/blogs/:id', async (request, response, next) => {
     try {
+        const decodedToken = jwt.verify(request.token, process.env.SECRET)
+        const user = await users.get(decodedToken.id)
+
         const body = request.body
         const id = request.params.id
         const res = await blog.update(id, body)
         response.status(200).json(res)
     } catch (error) {
-        console.error(error.message)
-        response.status(400).end() //json( {error: error.message } )
+        next(error)
     }
 })
 

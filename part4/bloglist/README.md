@@ -20,6 +20,9 @@ http GET http://localhost:3003/api/blogs/:id
 # POST blog : requires login
 http POST http://localhost:3003/api/blogs title={title} author={author} url={url}
 
+# POST blog comment : requires login
+http POST http://localhost:3003/api/blogs/:id/comments comment={comment}
+
 # PUT blog : requires login
 http PUT http://localhost:3003/api/blogs/:id likes={N} title={title} author={author}
 
@@ -61,8 +64,6 @@ SECRET
 TODO add this
 
 ## TODO
-- PUT doesn't support token authorization
-- DELETE doesn't support token authorization
 - No user deletion
 - No batch deletion for blogs
   http DELETE http://localhost:3003/api/blogs with a message body containing all the ids to delete
