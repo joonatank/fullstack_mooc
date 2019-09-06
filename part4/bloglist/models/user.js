@@ -49,7 +49,8 @@ const create = async (params) => {
 	const user = new User({
         username: params.username,
         name: params.name,
-        passwordHash: hash
+        passwordHash: hash,
+        blogs: []
     })
 
     return user.save()

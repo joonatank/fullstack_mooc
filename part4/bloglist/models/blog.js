@@ -11,7 +11,8 @@ const blogSchema = mongoose.Schema({
 	author: { type: String, required: true },
 	url: { type: String, required: true },
 	likes: { type: Number, default: 0 },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    comments: [{type: String }]
 })
 
 blogSchema.set('toJSON', {
@@ -35,12 +36,26 @@ const disconnect = () => {
 }
 
 const deleteAll = () => {
-    return Blog.deleteMany({}).exec()
+    return Blog.deleteMany({})
 }
 
-const save = (params, id) => {
-	const blog = new Blog({...params, user: id})
-    return blog.save()
+const save = (params, user) => {
+	const blog = new Blog({...params, user: user._id})
+    return blog.save().then(async res => {
+        user.blogs = user.blogs.concat(blog._id)
+
+        await user.save()
+
+        return res
+    })
+}
+
+const addComment = (id, comment) => {
+    // TODO check that the comment isn't empty
+    return Blog.findById(id).then(blog => {
+        blog.comments = blog.comments.concat(comment)
+        return blog.save()
+    })
 }
 
 const remove = (id, user) => {
@@ -48,15 +63,15 @@ const remove = (id, user) => {
 }
 
 const update = (id, params) => {
-    return Blog.findByIdAndUpdate(id, params).exec()
+    return Blog.findByIdAndUpdate(id, params)
 }
 
 const get = (id) => {
-	return Blog.findById(id).exec()
+	return Blog.findById(id)
 }
 
 const count = () => {
-	return Blog.countDocuments({}).exec()
+	return Blog.countDocuments({})
 }
 
 const all = () => {
@@ -72,5 +87,7 @@ module.exports = {
     update,
     get,
     count,
-    deleteAll
+    deleteAll,
+    addComment,
+    Blog
 }

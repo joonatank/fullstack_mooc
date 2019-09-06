@@ -1,3 +1,10 @@
+/*  Joonatan Kuosa
+ *  2019-08-28
+ *
+ *  Helsinki Fullstack Mooc
+ *  Exercise 4.1 - 4.21
+ */
+const Blog = require('../models/blog')
 
 const blogs = [
   {
@@ -60,4 +67,28 @@ const users = [
     { username: 'wolf', name: 'Nobody dares to name this one', password: 'good123' }
 ]
 
-module.exports = { blogs, users }
+const initialiseDB = async (user, blogsList) => {
+    if (!user) {
+        throw 'can\'t initialise database without a user'
+    }
+    const blog_list = blogsList ? blogsList : blogs
+
+    const COUNT = blog_list.length
+    const nb = await Promise.all(
+        blog_list
+            .map(b => {
+                const blog = new Blog.Blog({...b, user: user._id})
+                user.blogs = user.blogs.concat(blog._id)
+                return blog.save().then(async res => res)
+        })
+    )
+
+    await user.save()
+
+    const N = await Blog.count()
+    expect(N).toBe(COUNT)
+
+    return COUNT
+}
+
+module.exports = { blogs, users, initialiseDB }

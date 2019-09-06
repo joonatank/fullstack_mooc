@@ -15,6 +15,8 @@ const loginRouter = require('./controllers/login')
 const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
 
+// TODO which API functions require tokens and which don't? document
+
 const db_name = (process.env.NODE_ENV === 'test') ?
     process.env.TEST_DATABASE :
     process.env.DEV_DATABASE
@@ -45,7 +47,22 @@ app.post('/api/blogs', async (request, response, next) => {
         const decodedToken = jwt.verify(request.token, process.env.SECRET)
         const user = await users.get(decodedToken.id)
 
-        const res = await blog.save(request.body, user._id)
+        const res = await blog.save(request.body, user)
+        response.status(201).json(res)
+    } catch (error) {
+        next(error)
+    }
+})
+
+app.post('/api/blogs/:id/comments', async (request, response, next) => {
+    try {
+        const decodedToken = jwt.verify(request.token, process.env.SECRET)
+        const user = await users.get(decodedToken.id)
+
+        const comment = request.body.comment
+        const id = request.params.id
+
+        const res = await blog.addComment(id, comment)
         response.status(201).json(res)
     } catch (error) {
         next(error)
@@ -70,6 +87,7 @@ app.delete('/api/blogs/:id', async (request, response, next) => {
     }
 })
 
+// TODO doesn't require used to be logged in
 app.put('/api/blogs/:id', async (request, response) => {
     try {
         const body = request.body
@@ -77,6 +95,7 @@ app.put('/api/blogs/:id', async (request, response) => {
         const res = await blog.update(id, body)
         response.status(200).json(res)
     } catch (error) {
+        console.error(error.message)
         response.status(400).end() //json( {error: error.message } )
     }
 })
@@ -96,6 +115,7 @@ app.post('/api/users', async (request, response, next) => {
 })
 
 const errorHandler = (err, request, response, next) => {
+    console.error(err.message)
     if (err instanceof mongoose.Error) {
         return response.status(400).json( {error: err.message } )
     }
@@ -110,5 +130,10 @@ const errorHandler = (err, request, response, next) => {
     }
 }
 app.use(errorHandler)
+
+process.on('SIGINT', () => {
+    mongo.disconnect()
+    process.exit(0)
+})
 
 module.exports = app
