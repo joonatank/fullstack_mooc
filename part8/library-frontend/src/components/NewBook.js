@@ -10,21 +10,18 @@ const NewBook = ({ addBook }) => {
   const submit = async (e) => {
     e.preventDefault()
 
-    console.log('add book...')
-
     const y = parseInt(published)
     addBook({
       variables: { title, author, y, genres }
     }).then(res => {
-      console.log('book addded: ', res)
 
-      //TODO add the checking for res
       setTitle('')
       setPublished('')
       setAuhtor('')
       setGenres([])
       setGenre('')
     })
+    // TODO error handling (alerts)
   }
 
   const addGenre = () => {
