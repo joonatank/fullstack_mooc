@@ -1,103 +1,48 @@
-const { ApolloServer, gql } = require('apollo-server')
+/*  Joonatan Kuosa
+ *  2019-09-08
+ *
+ *  Helsinki Fullstack Mooc
+ *  Exercise 8.1 - 8.15
+ */
+require('dotenv').config()
+const { ApolloServer, UserInputError, gql } = require('apollo-server')
+const mongoose = require('mongoose')
 const uuid = require('uuid/v1')
 
-let authors = [
-  {
-    name: 'Robert Martin',
-    id: "afa51ab0-344d-11e9-a414-719c6709cf3e",
-    born: 1952,
-  },
-  {
-    name: 'Martin Fowler',
-    id: "afa5b6f0-344d-11e9-a414-719c6709cf3e",
-    born: 1963
-  },
-  {
-    name: 'Fyodor Dostoevsky',
-    id: "afa5b6f1-344d-11e9-a414-719c6709cf3e",
-    born: 1821
-  },
-  {
-    name: 'Joshua Kerievsky', // birthyear not known
-    id: "afa5b6f2-344d-11e9-a414-719c6709cf3e",
-  },
-  {
-    name: 'Sandi Metz', // birthyear not known
-    id: "afa5b6f3-344d-11e9-a414-719c6709cf3e",
-  },
-]
+const Authors = require('./models/author')
+const Books = require('./models/book')
 
-/*
- * It would be more sensible to assosiate book and the author by saving
- * the author id instead of the name to the book.
- * For simplicity we however save the author name.
-*/
+mongoose.set('useFindAndModify', false)
 
-let books = [
-  {
-    title: 'Clean Code',
-    published: 2008,
-    author: 'Robert Martin',
-    id: "afa5b6f4-344d-11e9-a414-719c6709cf3e",
-    genres: ['refactoring']
-  },
-  {
-    title: 'Agile software development',
-    published: 2002,
-    author: 'Robert Martin',
-    id: "afa5b6f5-344d-11e9-a414-719c6709cf3e",
-    genres: ['agile', 'patterns', 'design']
-  },
-  {
-    title: 'Refactoring, edition 2',
-    published: 2018,
-    author: 'Martin Fowler',
-    id: "afa5de00-344d-11e9-a414-719c6709cf3e",
-    genres: ['refactoring']
-  },
-  {
-    title: 'Refactoring to patterns',
-    published: 2008,
-    author: 'Joshua Kerievsky',
-    id: "afa5de01-344d-11e9-a414-719c6709cf3e",
-    genres: ['refactoring', 'patterns']
-  },
-  {
-    title: 'Practical Object-Oriented Design, An Agile Primer Using Ruby',
-    published: 2012,
-    author: 'Sandi Metz',
-    id: "afa5de02-344d-11e9-a414-719c6709cf3e",
-    genres: ['refactoring', 'design']
-  },
-  {
-    title: 'Crime and punishment',
-    published: 1866,
-    author: 'Fyodor Dostoevsky',
-    id: "afa5de03-344d-11e9-a414-719c6709cf3e",
-    genres: ['classic', 'crime']
-  },
-  {
-    title: 'The Demon',
-    published: 1872,
-    author: 'Fyodor Dostoevsky',
-    id: "afa5de04-344d-11e9-a414-719c6709cf3e",
-    genres: ['classic', 'revolution']
-  },
-]
+const USERNAME = process.env.DB_USERNAME
+const PASSWORD = process.env.DB_PASSWORD
+const DATABASE_HOST = process.env.DB_HOSTNAME
+const MONGODB_URI = `mongodb+srv://${USERNAME}:${PASSWORD}@${DATABASE_HOST}/graphql?retryWrites=true`
+
+console.log('connecting to', MONGODB_URI)
+
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
+  .then(() => {
+    console.log('connected to MongoDB')
+  })
+  .catch((error) => {
+    console.log('error connection to MongoDB:', error.message)
+  })
+
 
 const typeDefs = gql`
-  type Book {
-    title: String!
-    author: String!
-    published: Int
-    genres: [String!]
-    id: ID!
-  }
-
   type Author {
     name: String!
     born: Int
     bookCount: Int
+    id: ID!
+  }
+
+  type Book {
+    title: String!
+    author: Author!
+    published: Int
+    genres: [String!]
     id: ID!
   }
 
@@ -120,42 +65,84 @@ const typeDefs = gql`
   }
 `
 
+
+
 const resolvers = {
   Query: {
     allBooks: (root, args) => {
-      const b_ = args.author ? books.filter(b => b.author.includes(args.author)) : books
-      return args.genre ? b_.filter(b => b.genres.includes(args.genre)) : b_
+      if (args.author) {
+        return Authors
+          .findOne({ name: args.author })
+          .populate({
+            path: 'books',
+            match: args.genre ? { genres: {$in: args.genre} } : {}
+          })
+          .select('books')
+          .then(xs => xs.books)
+      }
+      else {
+        return args.genre
+          ? Books.where('genres').in(args.genre).populate('author')
+          : Books.find({}).populate('author')
+      }
     },
-    allAuthors: () => authors,
-    bookCount: () => books.length,
-    authorCount: () => authors.length,
+    allAuthors: () => Authors.find({}).populate('books'),
+    bookCount: () => Books.countDocuments(),
+    authorCount: () => Authors.countDocuments(),
   },
   Author: {
-    bookCount: (root) => books.filter(b => b.author === root.name).length
+    bookCount: (root) => (
+      Authors.findOne({ name: root.name })
+        .select('books')
+        .then(author => {
+          return author.books.length
+        })
+    )
   },
 
   Mutation: {
+    // Add a new author
+    // This will add an author if the author doesn't exists
+    //    but the book already exists. Since book names are unique can't add
+    //    another book with same title but different author.
+    //    So there is left an author with no books.
     addBook: (root, args) => {
-      const book = { ...args, id: uuid() }
-      if (authors.filter(a => a === args.author).length === 0) {
-        const author = { name: args.author, id: uuid() }
-        authors = authors.concat(author)
-      }
-      books = books.concat(book)
-      return book
+
+      return Authors.findOne({ name: args.author }).then((author_) => {
+        const author = author_
+          ? author_
+          : new Authors({ name: args.author })
+
+        const book = new Books({ ...args, author: author })
+        author.books = [ ...author.books, book._id ]
+        return author.save().then(() => book.save() )
+
+      }).catch(error => {
+        console.error('Error thrown: ', error)
+        let msg = ''
+
+        if (error.name === 'MongoError' && error.code === 11000) {
+          // TODO add which object (book or an author)
+          msg = 'Already exists : ' + error.message
+        }
+        else if (error.name === 'ValidationError') {
+          msg = error.name + error.message
+        }
+
+        throw new UserInputError(msg, { invalidArgs: args })
+      })
     },
+
     editAuthor: (root, args) => {
-      const f_authors = authors.filter(a => a.name === args.name)
-      if (f_authors.length === 0) {
-        return null
-      }
-      else {
-        const author = f_authors[0]
-        const xs = authors.filter(a => a.name !== args.name)
-        const x = { ...author, born: args.setBornTo }
-        authors = [ ...xs, x ]
-        return x
-      }
+      return Authors.findOne({ name: args.name }).then(author => {
+        author.born = args.setBornTo
+        return author.save()
+      }).catch(err => {
+        console.error(err)
+        throw new UserInputError(err.message, {
+          invalidArgs: args
+        })
+      })
     }
   }
 }
