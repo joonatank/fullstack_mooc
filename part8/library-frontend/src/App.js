@@ -65,11 +65,16 @@ const App = () => {
       {page === 'authors' &&
         <div>
           <Query query={ALL_AUTHORS}>
-            { (result) => <Authors result={result} /> }
+            { (result) => (
+              <div>
+                <Authors result={result} />
+                <Mutation mutation={EDIT_AUTHOR} refetchQueries={[{ query: ALL_AUTHORS }]}>
+                  { (editAuthor) => <EditAuthor result={result} editAuthor={editAuthor} /> }
+                </Mutation>
+              </div>
+              )
+            }
           </Query>
-          <Mutation mutation={EDIT_AUTHOR} refetchQueries={[{ query: ALL_AUTHORS }]}>
-            { (editAuthor) => <EditAuthor editAuthor={editAuthor} /> }
-          </Mutation>
         </div>
       }
 

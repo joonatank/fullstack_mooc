@@ -1,8 +1,12 @@
 import React, { useState } from 'react'
+import Select from 'react-select'
 
-const EditAuthor = ({ editAuthor }) => {
+const EditAuthor = ({ result, editAuthor }) => {
   const [ name, setName ] = useState('')
   const [ born, setBorn ] = useState('')
+
+  const authors = result.loading ? [] : result.data.allAuthors
+  const options = authors.map(x => ({ value: x.name, label: x.name }))
 
   const submit = async (e) => {
     e.preventDefault()
@@ -17,11 +21,20 @@ const EditAuthor = ({ editAuthor }) => {
     // TODO error handling (alerts)
   }
 
+  const handleSelect = (selected) => {
+    const str = selected.value
+    setName(str)
+    const author = authors.filter(x => x.name == str)[0]
+    setBorn(author.born)
+  }
+
   return (
     <div>
       <h2>Set birthyear</h2>
+      <br />
       <form onSubmit={submit}>
-        name <input value={name} onChange={({ target }) => setName(target.value)} /><br />
+        <Select value={{value: name, label: name}}
+            onChange={handleSelect} options={options} />
         born <input value={born} onChange={({ target }) => setBorn(target.value)} /><br />
         <button type="submit">update author</button>
       </form>
