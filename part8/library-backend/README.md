@@ -13,7 +13,9 @@ query {
 query {
   allBooks {
     title
-    author
+    author {
+      name
+    }
     published
     genres
   }
@@ -41,7 +43,9 @@ mutation {
     genres: ["crime"]
   ) {
     title,
-    author
+    author {
+      name
+    }
   }
 }
 

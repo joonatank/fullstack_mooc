@@ -87,16 +87,28 @@ const PASSWORD = process.env.DB_PASSWORD
 const DATABASE_HOST = process.env.DB_HOSTNAME
 const MONGODB_URI = `mongodb+srv://${USERNAME}:${PASSWORD}@${DATABASE_HOST}/graphql?retryWrites=true`
 
-console.log('Running: Init data on MongoDB')
-console.log('WARNING: This will destroy all data there.')
+if (process.env.NODE_ENV !== 'test') {
+    console.log('Running: Init data on MongoDB')
+    console.log('WARNING: This will destroy all data there.')
 
-mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
-  .then(async () => {
-    console.log('connected to MongoDB')
+    mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
+      .then(async () => {
+        console.log('connected to MongoDB')
+        await clearDb()
+        await initDb()
+        mongoose.connection.close()
+      }).catch((error) => {
+        console.log('error connection to MongoDB:', error.message)
+      })
+}
 
+const clearDb = async () => {
     // delete all docuements
     await Authors.deleteMany({})
     await Books.deleteMany({})
+}
+
+const initDb = async () => {
 
     // Generate Ids : need them to add references
     const getAuthorID = (name) => {
@@ -128,10 +140,6 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
     await Authors.insertMany(fAuthors)
 
     await Books.insertMany(fBooks)
+}
 
-    mongoose.connection.close()
-  })
-  .catch((error) => {
-    console.log('error connection to MongoDB:', error.message)
-  })
-
+module.exports = { clearDb, initDb, books, authors }

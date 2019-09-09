@@ -17,18 +17,14 @@ mongoose.set('useFindAndModify', false)
 const USERNAME = process.env.DB_USERNAME
 const PASSWORD = process.env.DB_PASSWORD
 const DATABASE_HOST = process.env.DB_HOSTNAME
-const MONGODB_URI = `mongodb+srv://${USERNAME}:${PASSWORD}@${DATABASE_HOST}/graphql?retryWrites=true`
+const DATABASE_NAME =
+    (process.env.NODE_ENV !== 'test')
+    ? 'graphql'
+    : 'graphql-test'
 
-console.log('connecting to', MONGODB_URI)
-
-mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
-  .then(() => {
-    console.log('connected to MongoDB')
-  })
-  .catch((error) => {
-    console.log('error connection to MongoDB:', error.message)
-  })
-
+const MONGODB_URI = `
+  mongodb+srv://${USERNAME}:${PASSWORD}@${DATABASE_HOST}/${DATABASE_NAME}?retryWrites=true
+`
 
 const typeDefs = gql`
   type Author {
@@ -60,8 +56,8 @@ const typeDefs = gql`
       published: Int
       genres: [String!]
     ): Book,
-    editAuthor(name: String!, setBornTo: Int!) : Author
 
+    editAuthor(name: String!, setBornTo: Int!) : Author
   }
 `
 
@@ -77,8 +73,7 @@ const resolvers = {
             path: 'books',
             match: args.genre ? { genres: {$in: args.genre} } : {}
           })
-          .select('books')
-          .then(xs => xs.books)
+          .then(x => x.books.map(b => b.populate('author').execPopulate()) )
       }
       else {
         return args.genre
@@ -147,11 +142,27 @@ const resolvers = {
   }
 }
 
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
+  .then(() => {
+    console.log('connected to MongoDB')
+  })
+  .catch((error) => {
+    console.log('error connection to MongoDB:', error.message)
+  })
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
 })
 
-server.listen().then(({ url }) => {
-  console.log(`Server ready at ${url}`)
-})
+if (process.env.NODE_ENV !== 'test') {
+  server.listen().then(({ url }) => {
+    console.log(`Server ready at ${url}`)
+  })
+}
+
+module.exports = {
+  typeDefs,
+  resolvers,
+  server,
+};
