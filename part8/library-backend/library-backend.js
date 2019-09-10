@@ -8,9 +8,12 @@ require('dotenv').config()
 const { ApolloServer, UserInputError, gql } = require('apollo-server')
 const mongoose = require('mongoose')
 const uuid = require('uuid/v1')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 
 const Authors = require('./models/author')
 const Books = require('./models/book')
+const Users = require('./models/user')
 
 mongoose.set('useFindAndModify', false)
 
@@ -26,7 +29,23 @@ const MONGODB_URI = `
   mongodb+srv://${USERNAME}:${PASSWORD}@${DATABASE_HOST}/${DATABASE_NAME}?retryWrites=true
 `
 
+const getVerifiedUser = (token) => {
+  const decoded = jwt.verify(token, process.env.JWT_SECRET)
+  return Users.findById(decoded.id)
+}
+
+
 const typeDefs = gql`
+  type User {
+    username: String!
+    favoriteGenre: String!
+    id: ID!
+  }
+
+  type Token {
+    value: String!
+  }
+
   type Author {
     name: String!
     born: Int
@@ -47,6 +66,7 @@ const typeDefs = gql`
     allAuthors: [Author!]
     bookCount: Int
     authorCount: Int
+    me(token: String!): User
   }
 
   type Mutation {
@@ -55,13 +75,22 @@ const typeDefs = gql`
       author: String!
       published: Int
       genres: [String!]
+      token: String!
     ): Book,
 
-    editAuthor(name: String!, setBornTo: Int!) : Author
+    editAuthor(name: String!, setBornTo: Int!, token: String!) : Author
+
+    createUser(
+      username: String!
+      password: String!
+      favoriteGenre: String!
+    ): User
+    login(
+      username: String!
+      password: String!
+    ): Token
   }
 `
-
-
 
 const resolvers = {
   Query: {
@@ -84,6 +113,7 @@ const resolvers = {
     allAuthors: () => Authors.find({}).populate('books'),
     bookCount: () => Books.countDocuments(),
     authorCount: () => Authors.countDocuments(),
+    me: (root, { token }) => getVerifiedUser(token)
   },
   Author: {
     bookCount: (root) => (
@@ -101,7 +131,13 @@ const resolvers = {
     //    but the book already exists. Since book names are unique can't add
     //    another book with same title but different author.
     //    So there is left an author with no books.
-    addBook: (root, args) => {
+    addBook: async (root, args) => {
+      try {
+        const user = await getVerifiedUser(args.token)
+      }
+      catch(err) {
+        throw new UserInputError('Not logged in', { invalidArgs: args })
+      }
 
       return Authors.findOne({ name: args.author }).then((author_) => {
         const author = author_
@@ -128,17 +164,53 @@ const resolvers = {
       })
     },
 
-    editAuthor: (root, args) => {
+    editAuthor: async (root, args) => {
+      try {
+        const user = await getVerifiedUser(args.token)
+      }
+      catch (err) {
+        throw new UserInputError('Not logged in', { invalidArgs: args })
+      }
+
       return Authors.findOne({ name: args.name }).then(author => {
         author.born = args.setBornTo
         return author.save()
       }).catch(err => {
         console.error(err)
-        throw new UserInputError(err.message, {
-          invalidArgs: args
+        throw new UserInputError(err.message, { invalidArgs: args })
+      })
+    },
+
+    createUser: (root, args) => {
+      if (args.password.length < 3) {
+          throw new UserInputError('Password too short', { invalidArgs: args })
+      }
+
+      return bcrypt.hash(args.password, 10).then(hash => {
+        const user = new Users({ ...args, hash: hash })
+        return user.save()
+          .catch(error => {
+            throw new UserInputError(error.message, { invalidArgs: args })
+          })
+      })
+    },
+    login: (root, args) => {
+      return Users.findOne({ username: args.username }).then(user => {
+        return bcrypt.compare(args.password, user.hash).then(res => {
+          if (res) {
+            console.log('user: ', user.username, ' password correct')
+            const forToken = { username: args.username, id: user._id }
+            const token = jwt.sign(forToken, process.env.JWT_SECRET)
+            return { value: token }
+          }
+          else {
+            console.log('user: ', user.username, ' password incorrect')
+            throw new UserInputError('wrong credentials')
+          }
         })
       })
     }
+
   }
 }
 

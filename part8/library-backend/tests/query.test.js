@@ -60,6 +60,14 @@ query {
   }
 }
 `
+const ME = gql`
+query ($token: String!) {
+  me(token: $token) {
+    username
+    favoriteGenre
+  }
+}
+`
 
 afterAll(async () => {
   await mongoose.connection.close()
@@ -156,16 +164,15 @@ describe('Queries', () => {
 })
 
 
-// TODO add mutation for adding book
-// TODO add mutation for editing an author
-describe.only('Mutations', () => {
+describe('Mutations', () => {
   const ADD_BOOK = gql`
-  mutation {
+  mutation ($token: String!) {
     addBook(
       title: "Pimeyden tango",
       author: "Reijo Mäki",
       published: 1997,
-      genres: ["crime"]
+      genres: ["crime"],
+      token: $token
     ) {
       title,
       author {
@@ -175,18 +182,63 @@ describe.only('Mutations', () => {
   }
   `
   const EDIT_AUTHOR = gql`
-  mutation {
-    editAuthor(name: "Reijo Mäki", setBornTo: 1958) {
+  mutation ($token: String!) {
+    editAuthor(name: "Reijo Mäki", setBornTo: 1958, token: $token) {
       name
       born
     }
   }
   `
+  const CREATE_USER = gql`
+  mutation {
+    createUser(username: "felix", password: "good", favoriteGenre: "classic") {
+      username
+      favoriteGenre
+    }
+  }
+  `
+
+  const LOGIN = gql`
+  mutation {
+    login(username: "felix", password: "good") {
+      value
+    }
+  }
+  `
+
+  it('creates an user', async () => {
+    const { mutate } = createTestClient(server);
+
+    const res = await mutate({ mutation: CREATE_USER })
+
+    expect(res.data.createUser).not.toBe(null)
+    expect(res.data.createUser.username).toBe('felix')
+    expect(res.data.createUser.favoriteGenre).toBe('classic')
+  })
+
+  it('login', async () => {
+    const { query, mutate } = createTestClient(server);
+
+    await mutate({ mutation: CREATE_USER })
+    const res = await mutate({ mutation: LOGIN })
+
+    expect(res.data.login).not.toBe(null)
+    expect(res.data.login.value).not.toBe(null)
+    const token = res.data.login.value
+
+    const me = await query({ query: ME, variables: { token: token } })
+    expect(me.data.me).toEqual({ username: 'felix', favoriteGenre: 'classic' })
+  })
 
   it('adds a book', async () => {
     const { mutate } = createTestClient(server);
 
-    const res = await mutate({ mutation: ADD_BOOK })
+    await mutate({ mutation: CREATE_USER })
+    const login = await mutate({ mutation: LOGIN })
+    const token = login.data.login.value
+
+    const res = await mutate({ mutation: ADD_BOOK, variables: { token: token } })
+
     expect(res.data.addBook).not.toBe(null)
     expect(res.data.addBook.title).toBe('Pimeyden tango')
     expect(res.data.addBook.author).not.toBe(null)
@@ -197,8 +249,13 @@ describe.only('Mutations', () => {
   it('edits an author', async () => {
     const { mutate } = createTestClient(server);
 
-    await mutate({ mutation: ADD_BOOK })
-    const res = await mutate({ mutation: EDIT_AUTHOR })
+    await mutate({ mutation: CREATE_USER })
+    const login = await mutate({ mutation: LOGIN })
+    const token = login.data.login.value
+
+    await mutate({ mutation: ADD_BOOK, variables: { token: token } })
+    const res = await mutate({ mutation: EDIT_AUTHOR, variables: { token: token } })
+
     expect(res.data.editAuthor).not.toBe(null)
     expect(res.data.editAuthor.name).toBe('Reijo Mäki')
     expect(res.data.editAuthor.born).toBe(1958)

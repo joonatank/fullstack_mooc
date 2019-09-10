@@ -35,12 +35,29 @@ query {
 }
 
 # Mutations
+# create new user: returns that user
 mutation {
+  createUser(username: "felix", password: "good", favoriteGenre: "classic") {
+    username
+    favoriteGenre
+  }
+}
+
+# Login returns token
+mutation {
+  login(username: "felix", password: "good") {
+    value
+  }
+}
+
+# add a new book : requires user to be logged in
+mutation (token: $token) {
   addBook(
     title: "Pimeyden tango",
     author: "Reijo Mäki",
     published: 1997,
-    genres: ["crime"]
+    genres: ["crime"],
+    token: $token
   ) {
     title,
     author {
@@ -49,8 +66,9 @@ mutation {
   }
 }
 
-mutation {
-  editAuthor(name: "Reijo Mäki", setBornTo: 1958) {
+# edit an author : requires user to be logged in
+mutation (token: $token) {
+  editAuthor(name: "Reijo Mäki", setBornTo: 1958, token: $token) {
     name
     born
   }

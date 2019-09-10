@@ -9,6 +9,7 @@ require('dotenv').config()
 
 const Authors = require('./models/author')
 const Books = require('./models/book')
+const Users = require('./models/user')
 
 const authors = [
   {
@@ -106,6 +107,7 @@ const clearDb = async () => {
     // delete all docuements
     await Authors.deleteMany({})
     await Books.deleteMany({})
+    await Users.deleteMany({})
 }
 
 const initDb = async () => {
