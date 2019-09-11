@@ -1,6 +1,6 @@
 import React from 'react'
 
-const BooksTable = ({ books, filter, header }) => (
+const BooksTable = ({ books, header }) => (
   <div>
     <h2>{header}</h2>
 
@@ -16,7 +16,6 @@ const BooksTable = ({ books, filter, header }) => (
           </th>
         </tr>
         {books
-          .filter(b => b.genres.reduce((acc, x) => acc || x.includes(filter), false))
           .map(a =>
               <tr key={a.title}>
                 <td>{a.title}</td>

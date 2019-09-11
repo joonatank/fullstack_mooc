@@ -3,8 +3,9 @@ import _ from 'lodash'
 
 import BooksTable from './BooksTable'
 
-const Books = ({ result, user }) => {
-  const [ filter, setFilter ] = useState('')
+const Books = ({ result, setFilter }) => {
+  //const [ filter, setFilter ] = useState('')
+  const filter =''
 
   if (result.loading) {
     return <div>loading...</div>
@@ -14,15 +15,22 @@ const Books = ({ result, user }) => {
   }
   else {
     const books = result.data.allBooks
+    console.log(books)
 
+    // TODO this doesn't work properly if filter is set since
+    // we are missing some of the genres
     const genres = _.uniq(
-      books.reduce((acc, b) => [ ...acc, ...b.genres], [])
+      books.reduce((acc, b) => [ ...acc, ...b.genres], [''])
     )
 
     return (
       <div>
         <BooksTable books={books} filter={filter} header={'Books'} />
-        {genres.map(a => <button onClick={() => setFilter(a)} key={a}>{a}</button>) }
+        {genres.map(a =>
+          <button onClick={() => setFilter(a)} key={a}>
+            {a !== '' ? a : 'All' }
+          </button>
+        )}
       </div>
     )
 

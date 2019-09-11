@@ -13,15 +13,25 @@ import LoginForm from './components/LoginForm'
 // Not going to use Context for Tokens because they are impossible to test
 //  without writing custom clients/servers for testing.
 //  For this demonstration just easier to pass the token in the message body.
+//
+// Using GraphQL for Genre filtering would be a really bad idea in a real application
+//  (unless we are worried about massive amounts of data)
+//  It does another request every time the filter is changed
+//  - it's slow (constant Loading screens)
+//  - it's wasteful
+//  - it can't handle showing all the genres, we have to add an extra button
+//      or make make another request to get a list of genres
 
+// FIXME
+// 8.22 : Cache updates don't work
+//
 // TODO
-// -- important
 // Add Error handling with alerts
 // Add info boxes to the user (flash messages or smth) when stuff is done
 //  createBook, editAuthor
-// -- nice to have
 // Move queries to separate file
 // Add redirect from add book to the books page
+// Add redirect from login to authors page
 const ALL_BOOKS = gql`
 query ($genre: String) {
   allBooks(genre: $genre) {
@@ -103,6 +113,7 @@ mutation($username: String!, $password: String!) {
 const App = () => {
   const [page, setPage] = useState('authors')
   const [token, setToken] = useState(null)
+  const [genreFilter, setGenreFilter] = useState('')
 
   useEffect(() => {
       setToken(localStorage.getItem('library-user-token'))
@@ -160,16 +171,16 @@ const App = () => {
       }
 
       {page === 'books' &&
-        <Query query={ALL_BOOKS}>
-          { (result) => <Books result={result} /> }
+          <Query query={ALL_BOOKS} variables={{ genre: genreFilter }} >
+          { (result) => <Books result={result} setFilter={setGenreFilter} /> }
         </Query>
       }
 
       {page === 'recom' &&
-        <Query query={ALL_BOOKS}>
-          { (books) =>
-            <Query query={ME} variables={{ token: token }} >
-            { (me) => <Recom result={books} user={me} /> }
+        <Query query={ME} variables={{ token: token }} >
+          { (me) =>
+            <Query query={ALL_BOOKS} variables={{ genre: me.data.me.favoriteGenre }} >
+            { (books) => <Recom result={books} user={me} /> }
             </Query>
           }
         </Query>
@@ -178,7 +189,9 @@ const App = () => {
       {page === 'add' &&
         <Mutation mutation={CREATE_BOOK}
             variables={({token: token})}
-            refetchQueries={[ { query: ALL_BOOKS }, { query: ALL_AUTHORS } ]}
+            refetchQueries={[ { query: ALL_BOOKS },
+                { query: ALL_BOOKS, variables: 'genre' },
+                { query: ALL_AUTHORS } ]}
           >
           {(addBook) => <NewBook addBook={addBook} />}
         </Mutation>

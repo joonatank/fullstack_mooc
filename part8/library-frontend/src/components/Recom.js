@@ -13,15 +13,10 @@ const Recom = ({ result, user }) => {
   else {
     const books = result.data.allBooks
 
-    const filter = user && user.data && user.data.me
-        ? user.data.me.favoriteGenre
-        : ''
-    //console.log(user.data.me.favoriteGenre)
-      //setFilter(user.data.me.favoriteGenre)
     return (
       <div>
         <p>Books in your favorite genre.</p>
-        <BooksTable books={books} filter={filter} header={'Recomendations'} />
+        <BooksTable books={books} header={'Recomendations'} />
       </div>
     )
   }
