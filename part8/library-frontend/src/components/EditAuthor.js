@@ -24,8 +24,11 @@ const EditAuthor = ({ result, editAuthor }) => {
   const handleSelect = (selected) => {
     const str = selected.value
     setName(str)
-    const author = authors.filter(x => x.name == str)[0]
-    setBorn(author.born)
+    const author = authors.filter(x => x.name === str)[0]
+    setBorn('')
+    if (author.born) {
+      setBorn(author.born)
+    }
   }
 
   return (
