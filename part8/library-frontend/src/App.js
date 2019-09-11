@@ -5,9 +5,14 @@ import { gql } from 'apollo-boost'
 import Authors from './components/Authors'
 import EditAuthor from './components/EditAuthor'
 import Books from './components/Books'
+import Recom from './components/Recom'
 import NewBook from './components/NewBook'
 import LoginForm from './components/LoginForm'
-//import RegisterForm from './components/RegisterForm'
+
+// NOTES
+// Not going to use Context for Tokens because they are impossible to test
+//  without writing custom clients/servers for testing.
+//  For this demonstration just easier to pass the token in the message body.
 
 // TODO
 // -- important
@@ -18,8 +23,8 @@ import LoginForm from './components/LoginForm'
 // Move queries to separate file
 // Add redirect from add book to the books page
 const ALL_BOOKS = gql`
-{
-  allBooks {
+query ($genre: String) {
+  allBooks(genre: $genre) {
     author {
       name
     }
@@ -97,7 +102,7 @@ mutation($username: String!, $password: String!) {
 
 const App = () => {
   const [page, setPage] = useState('authors')
-  const [token, setToken] = useState('')
+  const [token, setToken] = useState(null)
 
   useEffect(() => {
       setToken(localStorage.getItem('library-user-token'))
@@ -105,11 +110,11 @@ const App = () => {
 
   const logout = () => {
     localStorage.setItem('library-user-token', '')
-    setToken('')
+    setToken(null)
   }
 
   const NameBar = ({ result }) => (
-    result.loading ? null : result.data.me.username + " logged in"
+    result.loading || result.error ? null : result.data.me.username + " logged in"
   )
 
   return (
@@ -117,16 +122,17 @@ const App = () => {
       <div>
         <button onClick={() => setPage('authors')}>authors</button>
         <button onClick={() => setPage('books')}>books</button>
-        {token !== '' &&
+        {token &&
             <span>
               <button onClick={() => setPage('add')}>add book</button>
               <Query query={ME} variables={({token: token})} >
                 { (result) => <NameBar result={result} /> }
               </Query>
+              <button onClick={() => setPage('recom')}>recomendations</button>
               <button onClick={() => logout()}>logout</button>
             </span>
         }
-        {token === '' &&
+        {!token &&
             <span>
               <button onClick={() => setPage('login')}>login</button>
               <button onClick={() => setPage('register')}>register</button>
@@ -156,6 +162,16 @@ const App = () => {
       {page === 'books' &&
         <Query query={ALL_BOOKS}>
           { (result) => <Books result={result} /> }
+        </Query>
+      }
+
+      {page === 'recom' &&
+        <Query query={ALL_BOOKS}>
+          { (books) =>
+            <Query query={ME} variables={{ token: token }} >
+            { (me) => <Recom result={books} user={me} /> }
+            </Query>
+          }
         </Query>
       }
 

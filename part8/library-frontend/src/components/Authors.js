@@ -5,6 +5,9 @@ const Authors = ({ result }) => {
   if (result.loading) {
     return <div>loading...</div>
   }
+  else if (result.error) {
+    return <div>errors...</div>
+  }
   else {
       const authors = result.data.allAuthors
 

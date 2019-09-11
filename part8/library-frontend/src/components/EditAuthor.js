@@ -5,7 +5,7 @@ const EditAuthor = ({ result, editAuthor }) => {
   const [ name, setName ] = useState('')
   const [ born, setBorn ] = useState('')
 
-  const authors = result.loading ? [] : result.data.allAuthors
+  const authors = result.loading || result.error ? [] : result.data.allAuthors
   const options = authors.map(x => ({ value: x.name, label: x.name }))
 
   const submit = async (e) => {
