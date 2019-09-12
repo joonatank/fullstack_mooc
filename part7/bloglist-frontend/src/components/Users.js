@@ -5,6 +5,7 @@
  *  Exercise 7
  */
 import React from 'react'
+import PropTypes from 'prop-types';
 
 import { Link } from 'react-router-dom'
 
@@ -34,5 +35,9 @@ const Users = ({ users }) => (
         </Table>
     </div>
 )
+
+Users.propTypes = {
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
+}
 
 export default Users

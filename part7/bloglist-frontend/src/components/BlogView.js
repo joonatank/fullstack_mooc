@@ -7,6 +7,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
+import PropTypes from 'prop-types';
 
 import { Table, Button } from 'semantic-ui-react'
 
@@ -40,6 +41,12 @@ const BlogView = (props) => (
         <BlogList blogs={props.blogs}/>
     </div>
 )
+
+BlogView.propTypes = {
+    blogs: PropTypes.arrayOf(PropTypes.object).isRequired,
+    ui: PropTypes.object.isRequired,
+    showNew: PropTypes.func.isRequired,
+}
 
 const mapStateToProps = (state) => {
     return {

@@ -6,6 +6,7 @@
  */
 import React from 'react'
 import { connect } from 'react-redux'
+import PropTypes from 'prop-types';
 
 import { Form, Button } from 'semantic-ui-react'
 
@@ -40,6 +41,10 @@ const LoginForm = (props) => {
             <Button primary type='submit'>login</Button>
         </Form>
     )
+}
+
+LoginForm.propTypes = {
+    login: PropTypes.func.isRequired,
 }
 
 export default connect(

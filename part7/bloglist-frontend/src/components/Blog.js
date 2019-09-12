@@ -7,6 +7,7 @@
 import React, { useState } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
+import PropTypes from 'prop-types';
 
 import { Container, Button, Icon, Label, Input, Comment, Header, Divider, Confirm }
     from 'semantic-ui-react'
@@ -39,7 +40,6 @@ export const Blog = (props) => {
         setConfirmDelete(true)
     }
 
-    // TODO this should route out of the now deleted blog post
     const deleteConfirmed = (blog) => props.deleteBlogPost(props.user, blog)
 
     const handleCommentButton = (event) => {
@@ -102,6 +102,14 @@ export const Blog = (props) => {
 
         </Container>
     )
+}
+
+Blog.propTypes = {
+    blog: PropTypes.object.isRequired,
+    user: PropTypes.object.isRequired,
+    changeBlogPost: PropTypes.func.isRequired,
+    deleteBlogPost: PropTypes.func.isRequired,
+    addComment: PropTypes.func.isRequired
 }
 
 const mapStateToProps = (state) => {

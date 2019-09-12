@@ -5,6 +5,7 @@
  *  Exercise 7.4 - 7.14
  */
 import React, { useEffect } from 'react'
+import PropTypes from 'prop-types';
 import {
     BrowserRouter as Router,
     Route, Redirect, Link
@@ -71,14 +72,14 @@ const App = (props) => {
 
     return (
         <Container>
-            {props.user === null &&
+            {!props.user &&
                     <div>
                         <Header as='h1'>Bloglist</Header>
                         <Flash />
                         <LoginForm />
                     </div>
             }
-            {props.user !== null &&
+            {props.user &&
                 <Router>
                     <Sticky>
                         <Menu inverted id="nav">
@@ -111,6 +112,11 @@ const App = (props) => {
         </Container>
 
     )
+}
+
+App.propTypes = {
+    user: PropTypes.object,
+    blogs: PropTypes.arrayOf(PropTypes.object).isRequired,
 }
 
 const mapStateToProps = (state) => {

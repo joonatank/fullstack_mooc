@@ -6,6 +6,7 @@
  */
 import React, { useState } from 'react'
 import { connect } from 'react-redux'
+import PropTypes from 'prop-types';
 
 import { Form, Button, Label } from 'semantic-ui-react'
 
@@ -81,6 +82,12 @@ const NewBlogForm = (props) => {
             <Button onClick={props.hideNew}>Cancel</Button>
         </Form>
     )
+}
+
+NewBlogForm.propTypes = {
+    setFlash: PropTypes.func.isRequired,
+    hideNew: PropTypes.func.isRequired,
+    user: PropTypes.object.isRequired,
 }
 
 const mapToProps = (state) => {
