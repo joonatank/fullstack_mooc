@@ -6,7 +6,7 @@
  */
 import React, { useState } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 import PropTypes from 'prop-types';
 
 import { Container, Button, Icon, Label, Input, Comment, Header, Divider, Confirm }
@@ -40,7 +40,10 @@ export const Blog = (props) => {
         setConfirmDelete(true)
     }
 
-    const deleteConfirmed = (blog) => props.deleteBlogPost(props.user, blog)
+    const deleteConfirmed = (blog) => {
+        props.deleteBlogPost(props.user, blog)
+        props.history.push('/blogs')
+    }
 
     const handleCommentButton = (event) => {
         event.preventDefault()
@@ -104,6 +107,8 @@ export const Blog = (props) => {
     )
 }
 
+export const BlogRouted = withRouter(Blog)
+
 Blog.propTypes = {
     blog: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
@@ -120,4 +125,4 @@ const mapStateToProps = (state) => {
 
 export default connect(
     mapStateToProps, { deleteBlogPost, changeBlogPost, addComment }
-)(Blog)
+)(BlogRouted)

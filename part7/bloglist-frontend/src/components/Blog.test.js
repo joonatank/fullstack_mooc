@@ -2,7 +2,7 @@
  * 2019-09-12
  *
  * Compenent tests for Blog
- * Bypasses Redux as much as possible and only test the component.
+ * Bypasses Redux and Router and only test the component.
  */
 import React from 'react'
 import Enzyme, { shallow } from 'enzyme'
@@ -35,7 +35,8 @@ const setup = (user = currentUser) => {
         user: user,
         changeBlogPost: jest.fn(),
         deleteBlogPost: jest.fn(),
-        addComment: jest.fn()
+        addComment: jest.fn(),
+        history: { push: jest.fn() }
     }
 
     const wrapper = shallow(<Blog { ...props } />)
