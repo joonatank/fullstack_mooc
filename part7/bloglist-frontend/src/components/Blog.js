@@ -7,7 +7,7 @@
 import React, { useState } from 'react'
 import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router-dom'
-import PropTypes from 'prop-types';
+import PropTypes from 'prop-types'
 
 import { Container, Button, Icon, Label, Input, Comment, Header, Divider, Confirm }
     from 'semantic-ui-react'

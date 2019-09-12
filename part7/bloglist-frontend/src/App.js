@@ -5,7 +5,7 @@
  *  Exercise 7.4 - 7.14
  */
 import React, { useEffect } from 'react'
-import PropTypes from 'prop-types';
+import PropTypes from 'prop-types'
 import {
     BrowserRouter as Router,
     Route, Redirect, Link
