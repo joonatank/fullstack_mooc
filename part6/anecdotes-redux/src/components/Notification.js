@@ -17,10 +17,13 @@ const Notification = (props) => {
     }
 
     const note = props.notification
+    if (!note) {
+        return null
+    }
 
     return (
         <div style={style}>
-        {note}
+            {note}
         </div>
     )
 }
