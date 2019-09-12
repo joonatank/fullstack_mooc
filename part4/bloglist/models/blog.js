@@ -7,10 +7,10 @@
 const mongoose = require('mongoose')
 
 const blogSchema = mongoose.Schema({
-	title: String,
-	author: { type: String, required: true },
-	url: { type: String, required: true },
-	likes: { type: Number, default: 0 },
+    title: String,
+    author: { type: String, required: true },
+    url: { type: String, required: true },
+    likes: { type: Number, default: 0 },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     comments: [{ type: String, validate: { validator: (v) => /\w+/.test(v) } }]
 })
@@ -40,7 +40,7 @@ const deleteAll = () => {
 }
 
 const save = (params, user) => {
-	const blog = new Blog({...params, user: user._id})
+    const blog = new Blog({ ...params, user: user._id })
     return blog.save().then(async res => {
         user.blogs = user.blogs.concat(blog._id)
 
@@ -68,15 +68,15 @@ const update = (id, params) => {
 }
 
 const get = (id) => {
-	return Blog.findById(id)
+    return Blog.findById(id)
 }
 
 const count = () => {
-	return Blog.countDocuments({})
+    return Blog.countDocuments({})
 }
 
 const all = () => {
-	return Blog.find({})
+    return Blog.find({})
 }
 
 module.exports = {

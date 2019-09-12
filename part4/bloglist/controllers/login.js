@@ -7,13 +7,14 @@
 
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const process = require('process')
 const loginRouter = require('express').Router()
 const users = require('../models/user')
 
 loginRouter.post('/', async (req, resp) => {
     const body = req.body
 
-    const user = await users.find( {username: body.username} )
+    const user = await users.find( { username: body.username } )
     if (!user) {
         resp.status(401).json({ error: 'invalid username or password' })
     }

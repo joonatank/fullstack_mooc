@@ -232,7 +232,7 @@ describe('POST blog', () => {
 describe('POST a comment', () => {
     test('post a comment without login should fail with 401', async () => {
         const user = await createTestUser()
-        const COUNT = await helpers.initialiseDB(user)
+        await helpers.initialiseDB(user)
         const id = helpers.blogs[0]._id
         const comment = 'Very nice comment.'
 
@@ -244,7 +244,7 @@ describe('POST a comment', () => {
 
     test('post a comment if logged should succeed', async () => {
         const user = await createTestUser()
-        const COUNT = await helpers.initialiseDB(user)
+        await helpers.initialiseDB(user)
         const id = helpers.blogs[0]._id
         const comment = 'Very nice comment.'
 
@@ -261,10 +261,10 @@ describe('POST a comment', () => {
     })
 
     test('post a comment with a different user should succeed', async () => {
-        const user = await createTestUser()
+        await createTestUser()
         const more_users = await create_multiple_users()
         const blog_user = more_users[0]
-        const COUNT = await helpers.initialiseDB(blog_user)
+        await helpers.initialiseDB(blog_user)
 
         const id = helpers.blogs[0]._id
         const comment = 'Very nice comment.'
@@ -283,7 +283,7 @@ describe('POST a comment', () => {
 
     test('post an empty comment if logged should fail with 400', async () => {
         const user = await createTestUser()
-        const COUNT = await helpers.initialiseDB(user)
+        await helpers.initialiseDB(user)
         const id = helpers.blogs[0]._id
         const comment = ''
 
@@ -306,7 +306,7 @@ describe('POST a comment', () => {
 
     test('post multiple comments should succeed', async () => {
         const user = await createTestUser()
-        const COUNT = await helpers.initialiseDB(user)
+        await helpers.initialiseDB(user)
         const id = helpers.blogs[0]._id
         const comments = [...Array(2).keys()].map(x => `${x} Very nice comment.`)
 
@@ -396,12 +396,12 @@ describe('DELETE blog post', () => {
 
 describe('PUT blog post', () => {
     beforeEach(async () => {
-        user = await createTestUser()
+        const user = await createTestUser()
         this.COUNT = await helpers.initialiseDB(user)
     })
 
     test('put a like should succeed when logged in', async () => {
-        expect.assertions(6)
+        expect.assertions(5)
 
         const first = helpers.blogs[0]
         const id = first._id
@@ -423,7 +423,7 @@ describe('PUT blog post', () => {
     })
 
     test('put a like should fail when not logged in with 401', async () => {
-        expect.assertions(2)
+        expect.assertions(1)
 
         const first = helpers.blogs[0]
 
@@ -435,7 +435,7 @@ describe('PUT blog post', () => {
     })
 
     test('put invalid id should fail', async () => {
-        expect.assertions(2)
+        expect.assertions(1)
 
         const token = await post_login({ username: USER_NAME, password: USER_PASSWORD })
 

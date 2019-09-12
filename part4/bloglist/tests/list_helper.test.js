@@ -48,7 +48,7 @@ describe('favorite blog', () => {
 
     test('full list will return the one with highest likes', () => {
         const result = listHelper.favoriteBlog(helpers.blogs)
-        expect(result._id).toEqual("5a422b3a1b54a676234d17f9")
+        expect(result._id).toEqual('5a422b3a1b54a676234d17f9')
     })
 })
 

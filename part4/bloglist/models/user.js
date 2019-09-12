@@ -17,8 +17,8 @@ const userSchema = mongoose.Schema({
             message: props => `${props.value} not long enough`
         }
     },
-	name: { type: String, required: true },
-	passwordHash: { type: String, required: true },
+    name: { type: String, required: true },
+    passwordHash: { type: String, required: true },
     blogs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Blog' }]
 })
 
@@ -46,7 +46,7 @@ const create = async (params) => {
     const salt = 10
     const hash = await bcrypt.hash(params.password, salt)
 
-	const user = new User({
+    const user = new User({
         username: params.username,
         name: params.name,
         passwordHash: hash,
@@ -65,7 +65,7 @@ const deleteAll = () => {
 }
 
 const count = () => {
-	return User.countDocuments().exec()
+    return User.countDocuments().exec()
 }
 
 const find = (params) => {

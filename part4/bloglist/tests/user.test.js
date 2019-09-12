@@ -52,7 +52,7 @@ describe('GET users', () => {
                 const m = resp.body[0]
                 expect(m.id).toBeDefined()
                 // check equality to ensure it contains NO password
-                expect(m).toEqual( {username: user.username, name: user.name, id: m.id, blogs: [] } )
+                expect(m).toEqual( { username: user.username, name: user.name, id: m.id, blogs: [] } )
             })
     })
 
@@ -77,7 +77,7 @@ describe('GET users', () => {
 
     test('get users list has blogs', async () => {
         const user = { username: 'felix', name: 'Felix the Magnificent', password: 'good123' }
-        userObj = await users.create(user)
+        const userObj = await users.create(user)
 
         // create all six blog posts with the single user
         await helpers.initialiseDB(userObj)
@@ -90,8 +90,8 @@ describe('GET users', () => {
                 const m = resp.body[0]
                 expect(m.blogs.length).toBe(6)
 
-                b = m.blogs[0]
-                a = helpers.blogs[0]
+                const b = m.blogs[0]
+                const a = helpers.blogs[0]
                 expect(b.author).toBe(a.author)
                 expect(b.title).toBe(a.title)
                 expect(b.likes).toBe(a.likes)

@@ -19,12 +19,12 @@ const favoriteBlog = (blogs) => {
 /// Find an author with the most posts
 const mostBlogs = (blogs) => {
     // author map
-    const authors = blogs.reduce((acc, x, i, arr) => {
+    const authors = blogs.reduce((acc, x) => {
         const val = acc.has(x.author) ? acc.get(x.author) : 0
         acc.set(x.author, val+1)
         return acc
-        }, new Map()
-        )
+    }, new Map()
+    )
 
     // highest number of blogs
     const max = [...authors].reduce((acc, x) => acc[1] < x[1] ? x : acc, ['', 0])
@@ -34,12 +34,12 @@ const mostBlogs = (blogs) => {
 /// Find an author with the most posts
 const mostLikes = (blogs) => {
     // author map
-    const authors = blogs.reduce((acc, x, i, arr) => {
+    const authors = blogs.reduce((acc, x) => {
         const val = acc.has(x.author) ? acc.get(x.author) : 0
         acc.set(x.author, val + x.likes)
         return acc
-        }, new Map()
-        )
+    }, new Map()
+    )
 
     // highest number of blogs
     const max = [...authors].reduce((acc, x) => acc[1] < x[1] ? x : acc, ['', 0])
