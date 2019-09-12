@@ -13,28 +13,19 @@ import { Message } from 'semantic-ui-react'
 
 import { setFlash } from '../reducers/flashReducer'
 
-const Flash = (props) => {
-    const msg = props.msg
-    const look = props.look
-
-    if (msg === undefined || msg === null || msg === '') {
-        return null
-    }
-    else if (look === 'error') {
-        return (
-            <Message negative>
-                <p> {msg} </p>
-            </Message>
-        )
-    }
-    else {
-        return (
-            <Message positive>
-                <p> {msg} </p>
-            </Message>
-        )
-    }
-}
+const Flash = ({ msg, look }) => (
+    !msg
+    ? null
+    : (look === 'error')
+    ? ( <Message negative>
+            <p> {msg} </p>
+        </Message>
+      )
+    : ( <Message positive>
+            <p> {msg} </p>
+        </Message>
+      )
+)
 
 Flash.propTypes = {
     msg: PropTypes.string,
