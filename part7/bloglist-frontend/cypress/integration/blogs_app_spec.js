@@ -1,18 +1,25 @@
+// TODO some inconsistencies when running all tests
+// Failing on the count of blogs after delete
+// Probably due to individually deleting the posts
+//  would need a proper zero state before each tests.
 describe('Blogs', function() {
 
     const USER = { username: 'tester', password: 'good', name: 'Tester the Magnanimous' }
 
+    // Create a test user, ignore errors (since we don't have a DELETE)
+    before(function () {
+        console.log('creating user')
+        cy.request({
+            method: 'POST',
+            url: '/api/users',
+            body: USER,
+            failOnStatusCode: false
+        })
+    })
+
     const getUser = () => {
         return cy.request('POST', '/api/login', USER).then(res => res.body)
     }
-
-    // We want to use these here to test the login function
-    // Only need the user to be created once for this
-    before(function () {
-    })
-
-    after(function () {
-    })
 
     const DATA = [
         { author: "Author",

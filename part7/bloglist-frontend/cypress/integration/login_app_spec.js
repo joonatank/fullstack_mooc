@@ -1,6 +1,18 @@
+
 describe('Login', function() {
 
     const user = { username: 'tester', password: 'good', name: 'Tester the Magnanimous' }
+
+    // Create a test user, ignore errors (since we don't have a DELETE)
+    before(function () {
+        console.log('creating user')
+        cy.request({
+            method: 'POST',
+            url: '/api/users',
+            body: user,
+            failOnStatusCode: false
+        })
+    })
 
     // TODO create a test user before tests
     //      - problem is that backend needs DELETE user for it
