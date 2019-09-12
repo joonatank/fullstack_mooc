@@ -8,7 +8,6 @@ import React, { useState } from 'react'
 import { connect } from 'react-redux'
 import { createDote } from '../reducers/anecdoteReducer'
 import { setFlash } from '../reducers/notificationReducer'
-import service from '../service'
 
 const AnecdoteForm = (props) => {
     const [ newAnecdote, setNewAnecdote ] = useState('')

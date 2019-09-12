@@ -5,7 +5,7 @@
  *  Exercise 6.3 - 6.8
  */
 import freeze from 'deep-freeze'
-import reducer, { setFlash } from './notificationReducer'
+import reducer from './notificationReducer'
 
 describe('notifcation reducer', () => {
     test('initial state is empty', () => {

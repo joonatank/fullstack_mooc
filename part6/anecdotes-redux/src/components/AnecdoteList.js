@@ -29,7 +29,7 @@ const AnecdoteList = (props) => {
                             <button onClick={() => handleVote(anecdote)}>vote</button>
                         </div>
                     </div>
-            )}
+                )}
         </div>
     )
 }

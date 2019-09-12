@@ -9,10 +9,10 @@ const initialState = ''
 
 const reducer = (state = initialState, action) => {
     switch (action.type) {
-        case 'FILTER':
-            return action.filter;
-        default:
-            return state;
+    case 'FILTER':
+        return action.filter
+    default:
+        return state
     }
 }
 

@@ -9,10 +9,10 @@ const initialState = ''
 
 const reducer = (state = initialState, action = { type: '' }) => {
     switch (action.type) {
-        case 'SET_FLASH':
-            return action.msg
-        default:
-            return state
+    case 'SET_FLASH':
+        return action.msg
+    default:
+        return state
     }
 }
 
