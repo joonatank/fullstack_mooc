@@ -21,16 +21,16 @@ const Menu = ({ anecdotes, addNew }) => {
       <Router>
         <div>
           <Link to='/' style={padding}>anecdotes</Link>
-          <Link to='/new' style={padding}>create new</Link>
+          <Link to='/create' style={padding}>create new</Link>
           <Link to='/about' style={padding}>about</Link>
         </div>
         <p>{flash}</p>
         <Route exact path='/' render={() => <Redirect to="/anecdotes" />} />
         <Route exact path='/anecdotes' render={() => <AnecdoteList anecdotes={anecdotes}/>} />
         <Route exact path='/anecdotes/:id' render={({ match }) =>
-            <Anecdote anecdote={anecdotes.filter(x => x.id === match.params.id)[0]} />}
-          />
-        <Route path='/new' render={() => <CreateNew addNew={addNew} onAddNew={onAddNew} />} />
+          <Anecdote anecdote={anecdotes.filter(x => x.id === match.params.id)[0]} />}
+        />
+        <Route path='/create' render={() => <CreateNew addNew={addNew} onAddNew={onAddNew} />} />
         <Route path='/about' render={() => <About />} />
       </Router>
     </div>
@@ -65,7 +65,7 @@ const About = () => (
     <em>An anecdote is a brief, revealing account of an individual person or an incident.
       Occasionally humorous, anecdotes differ from jokes because their primary purpose is not simply to provoke laughter but to reveal a truth more general than the brief tale itself,
       such as to characterize a person by delineating a specific quirk or trait, to communicate an abstract idea about a person, place, or thing through the concrete details of a short narrative.
-      An anecdote is "a story with a point."</em>
+      An anecdote is &quot;a story with a point.&quot;</em>
 
     <p>Software engineering is full of excellent anecdotes, at this app you can find the best and add more.</p>
   </div>
@@ -142,25 +142,9 @@ const App = () => {
     }
   ])
 
-  const [notification, setNotification] = useState('')
-
   const addNew = (anecdote) => {
     anecdote.id = (Math.random() * 10000).toFixed(0)
     setAnecdotes(anecdotes.concat(anecdote))
-  }
-
-  const anecdoteById = (id) =>
-    anecdotes.find(a => a.id === id)
-
-  const vote = (id) => {
-    const anecdote = anecdoteById(id)
-
-    const voted = {
-      ...anecdote,
-      votes: anecdote.votes + 1
-    }
-
-    setAnecdotes(anecdotes.map(a => a.id === id ? voted : a))
   }
 
   return (
@@ -172,4 +156,4 @@ const App = () => {
   )
 }
 
-export default App;
+export default App
