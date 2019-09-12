@@ -22,8 +22,6 @@ const NewBlogForm = ({ visibleCb, newBlogCb }) => {
                 setNewAuthor('')
                 setNewUrl('')
             }
-            else {
-            }
         })
     }
 

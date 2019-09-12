@@ -62,7 +62,7 @@ describe('<App />', () => {
         const comp = render( <App /> )
 
         // wait to render
-        const blogs = await waitForElement(() => comp.getByText('Blogs'))
+        await waitForElement(() => comp.getByText('Blogs'))
 
         // login is not present
         expect(comp.container).not.toHaveTextContent('username')

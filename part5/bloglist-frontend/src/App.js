@@ -178,7 +178,7 @@ const App = () => {
                     <h1>Blogs</h1>
                     { postBlogVisible && <NewBlogForm visibleCb={setPostBlogVisible}
                         newBlogCb={handleNewBlog}
-                        /> }
+                    /> }
                     { !postBlogVisible &&
                         <button onClick={() => setPostBlogVisible(true)}>create new</button>
                     }
