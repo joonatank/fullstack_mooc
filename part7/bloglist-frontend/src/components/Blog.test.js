@@ -1,17 +1,26 @@
+/* Joonatan Kuosa
+ * 2019-09-12
+ *
+ * Compenent tests for Blog
+ * Bypasses Redux as much as possible and only test the component.
+ */
 import React from 'react'
-import '@testing-library/jest-dom/extend-expect'
-import { render, cleanup, fireEvent } from '@testing-library/react'
-import Blog from './Blog'
+import Enzyme, { shallow } from 'enzyme'
+import Adapter from 'enzyme-adapter-react-16'
 
-// TODO move to auto ran
-afterEach(cleanup)
+import { Label } from 'semantic-ui-react'
 
-// TODO add user
+import { Blog } from './Blog'
+
+Enzyme.configure({ adapter: new Adapter() })
+
 const blog = {
     title: 'Blaa',
     author: 'felix',
     url: 'http://nowhere.not',
     likes: 5,
+    comments: [],
+    // TODO testing with and without comments
     user: { username: 'gool', name: 'Gool Folly' }
 }
 
@@ -20,55 +29,87 @@ const currentUser = {
     name: 'Foo Bar'
 }
 
-test('renders content', () => {
+const setup = (user = currentUser) => {
+    const props = {
+        blog: blog,
+        user: user,
+        changeBlogPost: jest.fn(),
+        deleteBlogPost: jest.fn(),
+        addComment: jest.fn()
+    }
 
-    const mockHandler = jest.fn()
-    const component = render(
-        <Blog blog={blog} user={currentUser} blogChangedCb={mockHandler} />
-    )
+    const wrapper = shallow(<Blog { ...props } />)
 
-    expect(component.container).toHaveTextContent( blog.title )
-    expect(component.container).toHaveTextContent( blog.author )
-    expect(component.container).not.toHaveTextContent( '5' )
-    expect(component.container).not.toHaveTextContent( blog.url )
-    expect(component.container).not.toHaveTextContent( blog.user.username )
-    expect(component.container).not.toHaveTextContent( blog.user.name )
-    // TODO check that we don't show extra info: url, user, likes : by default
+    return { props, wrapper }
+}
+
+
+describe('Blog', () => {
+
+    it('renders the blog', () => {
+        const { wrapper } = setup()
+
+        expect(wrapper.find('h2').text()).toMatch(/Blaa/)
+        expect(wrapper.find('h2').text()).toMatch(/felix/)
+
+        const link = wrapper.find('Link').props()
+        expect(link.to).toBe(blog.url)
+
+        // check that we have the 'added by {user}'
+        // not a fan of the way to do this check, I don't care in which component it is
+        // I just wanna know the text is there (but too hard to test cleanly)
+        expect(wrapper.find('Label')
+            .containsMatchingElement(
+                <Label>added by {blog.user.name}</Label>)
+        ).toBe(true)
+
+        // Likes
+        expect(wrapper.find('Label#likes').contains(5)).toBe(true)
+
+        // Comment section
+        expect(wrapper.find('#comments').find('Header').contains('Comments')).toBe(true)
+        // No comments
+        expect(wrapper.find('#comments').contains('<Comment>')).toBe(false)
+
+        // Negative tests: doesn't contain the logged in user
+        expect(wrapper.contains(currentUser.name)).toBe(false)
+        expect(wrapper.contains(currentUser.username)).toBe(false)
+    })
+
+    // Test button clicks
+    const mockEvt = { preventDefault: () => {}, stopPropagation: () => {} }
+
+    it('like button works', () => {
+        const { props, wrapper } = setup()
+
+        const like = wrapper.find('#like')
+
+        expect(props.changeBlogPost.mock.calls.length).toBe(0)
+        like.find('Button').simulate('click', mockEvt)
+        expect(props.changeBlogPost.mock.calls.length).toBe(1)
+    })
+
+    it('no delete button for other users', () => {
+        const { wrapper } = setup()
+
+        expect(wrapper.find('#delete').exists()).toBe(false)
+    })
+
+    it('delete button works for owner', () => {
+        const { props, wrapper } = setup(blog.user)
+        const del = wrapper.find('#delete')
+        const delBtn = del.find('Button')
+        expect(del.exists()).toBe(true)
+        expect(delBtn.exists()).toBe(true)
+
+        expect(props.deleteBlogPost.mock.calls.length).toBe(0)
+        delBtn.simulate('click', mockEvt)
+        expect(props.deleteBlogPost.mock.calls.length).toBe(0)
+        // confirm delete
+        del.find('Confirm').props().onConfirm()
+        expect(props.deleteBlogPost.mock.calls.length).toBe(1)
+    })
+
+    // TODO should have a test for adding comments
+    // and check that they are shown properly
 })
-
-test('renders expanded content', () => {
-
-    const mockHandler = jest.fn()
-    const component = render(
-        <Blog blog={blog} user={currentUser} blogChangedCb={mockHandler} />
-    )
-    const b = component.container.querySelector('div')
-    fireEvent.click(b)
-
-    expect(component.container).toHaveTextContent( blog.title )
-    expect(component.container).toHaveTextContent( blog.author )
-    expect(component.container).toHaveTextContent( '5' )
-    expect(component.container).toHaveTextContent( blog.url )
-    expect(component.container).toHaveTextContent( blog.user.name )
-    expect(component.container).not.toHaveTextContent( blog.username )
-
-    expect(mockHandler.mock.calls.length).toBe(0)
-
-    // TEST the like callback
-    const like = component.getByText('like')
-    fireEvent.click(like)
-    fireEvent.click(like)
-    expect(mockHandler.mock.calls.length).toBe(2)
-
-    // TODO how to search for all buttons?
-    expect(component.container).not.toHaveTextContent( 'delete' )
-})
-
-// TODO test that callback receives correct data
-//      blog, {changes}
-
-/* TODO test delete button (need same user and creator)
-const del = component.getByText('delete')
-fireEvent.click(del)
-expect(mockHandler.mock.calls.length).toBe(2)
-*/

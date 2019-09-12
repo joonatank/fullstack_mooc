@@ -14,7 +14,7 @@ import { Container, Button, Icon, Label, Input, Comment, Header, Divider, Confir
 import { changeBlogPost, deleteBlogPost, addComment } from '../reducers/blogReducer'
 import { useField } from '../hooks'
 
-const Blog = (props) => {
+export const Blog = (props) => {
     const comment = useField('text')
     const [ confirmDelete, setConfirmDelete ] = useState(false)
 
@@ -60,7 +60,7 @@ const Blog = (props) => {
     return (
         <Container>
             {username === props.user.username &&
-                <div>
+                <div id='delete'>
                     <Button floated='right' color='red'
                         onClick={handleRemoveButton}>Delete
                     </Button>
@@ -76,17 +76,17 @@ const Blog = (props) => {
             <p><Link to={blog.url}>{blog.url}</Link></p>
 
             <Button as='div' labelPosition='right'>
-                <Button color='red' onClick={(e) => handleLikeButton(e, blog)}>
+                <Button id='like' color='red' onClick={(e) => handleLikeButton(e, blog)}>
                     <Icon name='heart' />
                     Like
                 </Button>
-                <Label as='a' basic pointing='left'>
+                <Label id='likes' as='a' basic pointing='left'>
                     {blog.likes}
                 </Label>
             </Button>
 
             <Label>added by {name}</Label>
-            <Comment.Group>
+            <Comment.Group id="comments">
                 <Header as="h3" dividing>Comments</Header>
                 {blog.comments.map(x =>
                     <Comment key={x}>
