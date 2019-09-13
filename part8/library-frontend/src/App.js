@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Query, Mutation } from 'react-apollo'
 import { gql } from 'apollo-boost'
-import { useSubscription } from '@apollo/react-hooks'
+import { useQuery, useMutation, useSubscription, useApolloClient } from '@apollo/react-hooks'
 
 import Authors from './components/Authors'
 import EditAuthor from './components/EditAuthor'
@@ -33,15 +33,16 @@ import LoginForm from './components/LoginForm'
 // Move queries to separate file
 // Add redirect from add book to the books page
 // Add redirect from login to authors page
+
 const ALL_BOOKS = gql`
 query ($genre: String) {
   allBooks(genre: $genre) {
+    id
+    title
+    genres
     author {
       name
     }
-    title
-    genres
-    id
   }
 }
 `
@@ -56,8 +57,8 @@ const ALL_AUTHORS = gql`
 }
 `
 const ME = gql`
-query ($token: String!) {
-  me(token: $token) {
+query {
+  me {
     username
     favoriteGenre
   }
@@ -69,7 +70,6 @@ const CREATE_BOOK = gql`
       $author: String!,
       $published: Int,
       $genres: [String!],
-      $token: String!
       )
     {
     addBook (
@@ -77,18 +77,19 @@ const CREATE_BOOK = gql`
       author: $author,
       published: $published,
       genres: $genres
-      token: $token
     ) {
-      title
-      author {
-        name
-      }
+    id
+    title
+    genres
+    author {
+      name
     }
+  }
 }
 `
 const EDIT_AUTHOR = gql`
-mutation editAuthor($name: String!, $born: Int!, $token: String!) {
-  editAuthor(name: $name, setBornTo: $born, token: $token)
+mutation editAuthor($name: String!, $born: Int!) {
+  editAuthor(name: $name, setBornTo: $born)
   {
     name
     born
@@ -111,29 +112,57 @@ mutation($username: String!, $password: String!) {
 }
 `
 
-const BOOK_DETAILS = gql`
-fragment BookDetails on Book {
-  id
-  title
-  author {
-    name
-  }
-}
-`
-
 const BOOK_ADDED = gql`
 subscription {
   bookAdded {
-    ...BookDetails
+    id
+    title
+    genres
+    author {
+      name
+    }
   }
 }
-${BOOK_DETAILS}
 `
 
 const App = () => {
   const [page, setPage] = useState('authors')
   const [token, setToken] = useState(null)
   const [genreFilter, setGenreFilter] = useState('')
+
+  const client = useApolloClient()
+
+  const books = useQuery(ALL_BOOKS)
+  const authors = useQuery(ALL_AUTHORS)
+
+  const handleError = (error) => {
+    console.error(error)
+    error.graphQLErrors.map(err => console.error(err.message))
+  }
+
+  const [addBook] = useMutation(CREATE_BOOK, {
+    onError: handleError,
+    update: (store, response) => {
+      console.log('mutation resp: ', response)
+      updateCacheWith(response.data.addBook)
+    }
+  })
+
+  const updateCacheWith = (book) => {
+    console.log('updateCacheWith: ', book)
+    const includedIn = (set, object) =>
+      set.map(p => p.id).includes(object.id)
+
+    const dataInStore = client.readQuery({ query: ALL_BOOKS })
+    console.log('datainstore: ', dataInStore)
+    if (!includedIn(dataInStore.allBooks, book)) {
+      dataInStore.allBooks.push(book)
+      client.writeQuery({
+        query: ALL_BOOKS,
+        data: dataInStore
+      })
+    }
+  }
 
   useEffect(() => {
       setToken(localStorage.getItem('library-user-token'))
@@ -142,11 +171,9 @@ const App = () => {
   useSubscription(BOOK_ADDED, {
     onSubscriptionData: ({ subscriptionData }) => {
       console.log(subscriptionData)
-      if (subscriptionData.data.bookAdded) {
-        const addedBook = subscriptionData.data.bookAdded
-        alert(`${addedBook.title} added`)
-      }
-      // TODO add update cache
+      const addedBook = subscriptionData.data.bookAdded
+      alert(`${addedBook.title} added`)
+      updateCacheWith(addedBook)
     }
   })
 
@@ -156,7 +183,9 @@ const App = () => {
   }
 
   const NameBar = ({ result }) => (
-    result.loading || result.error ? null : result.data.me.username + " logged in"
+    result.loading || result.error ? null
+      : !result.data.me ? null
+      : result.data.me.username + " logged in"
   )
 
   return (
@@ -167,7 +196,7 @@ const App = () => {
         {token &&
             <span>
               <button onClick={() => setPage('add')}>add book</button>
-              <Query query={ME} variables={({token: token})} >
+              <Query query={ME} >
                 { (result) => <NameBar result={result} /> }
               </Query>
               <button onClick={() => setPage('recom')}>recomendations</button>
@@ -187,12 +216,11 @@ const App = () => {
           <Query query={ALL_AUTHORS}>
             { (result) => (
               <div>
-                <Authors result={result} />
+                <Authors result={authors} />
                 <Mutation mutation={EDIT_AUTHOR}
-                      variables={({token: token})}
                       refetchQueries={[{ query: ALL_AUTHORS }]}
                     >
-                  { (editAuthor) => <EditAuthor result={result} editAuthor={editAuthor} /> }
+                { (editAuthor) => <EditAuthor result={authors} editAuthor={editAuthor} /> }
                 </Mutation>
               </div>
               )
@@ -201,14 +229,10 @@ const App = () => {
         </div>
       }
 
-      {page === 'books' &&
-          <Query query={ALL_BOOKS} variables={{ genre: genreFilter }} >
-          { (result) => <Books result={result} setFilter={setGenreFilter} /> }
-        </Query>
-      }
+      {page === 'books' && <Books result={books} setFilter={setGenreFilter} /> }
 
       {page === 'recom' &&
-        <Query query={ME} variables={{ token: token }} >
+        <Query query={ME} >
           { (me) =>
             <Query query={ALL_BOOKS} variables={{ genre: me.data.me.favoriteGenre }} >
             { (books) => <Recom result={books} user={me} /> }
@@ -217,16 +241,7 @@ const App = () => {
         </Query>
       }
 
-      {page === 'add' &&
-        <Mutation mutation={CREATE_BOOK}
-            variables={({token: token})}
-            refetchQueries={[ { query: ALL_BOOKS },
-                { query: ALL_BOOKS, variables: 'genre' },
-                { query: ALL_AUTHORS } ]}
-          >
-          {(addBook) => <NewBook addBook={addBook} />}
-        </Mutation>
-      }
+      {page === 'add' && <NewBook addBook={addBook} />}
 
       {page === 'login' &&
         <Mutation mutation={LOGIN}>

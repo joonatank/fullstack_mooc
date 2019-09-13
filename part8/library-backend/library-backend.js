@@ -66,7 +66,7 @@ const typeDefs = gql`
     allAuthors: [Author!]
     bookCount: Int
     authorCount: Int
-    me(token: String!): User
+    me: User
   }
 
   type Mutation {
@@ -75,10 +75,9 @@ const typeDefs = gql`
       author: String!
       published: Int
       genres: [String!]
-      token: String!
     ): Book,
 
-    editAuthor(name: String!, setBornTo: Int!, token: String!) : Author
+    editAuthor(name: String!, setBornTo: Int!) : Author
 
     createUser(
       username: String!
@@ -119,7 +118,7 @@ const resolvers = {
     allAuthors: () => Authors.find({}).populate('books'),
     bookCount: () => Books.countDocuments(),
     authorCount: () => Authors.countDocuments(),
-    me: (root, { token }) => getVerifiedUser(token)
+    me: (root, args, context) => context.user
   },
   Author: {
     bookCount: (root) => (
@@ -139,11 +138,8 @@ const resolvers = {
     //    So there is left an author with no books.
     //
     // TODO cleanup by doing proper promise chaining
-    addBook: async (root, args) => {
-      try {
-        const user = await getVerifiedUser(args.token)
-      }
-      catch(err) {
+    addBook: async (root, args, context) => {
+      if (!context.user) {
         throw new UserInputError('Not logged in', { invalidArgs: args })
       }
 
@@ -175,11 +171,8 @@ const resolvers = {
       })
     },
 
-    editAuthor: async (root, args) => {
-      try {
-        const user = await getVerifiedUser(args.token)
-      }
-      catch (err) {
+    editAuthor: async (root, args, context) => {
+      if (!context.user) {
         throw new UserInputError('Not logged in', { invalidArgs: args })
       }
 
@@ -241,6 +234,14 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true })
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  context: async({ req }) => {
+    const auth = req ? req.headers.authorization : null
+    if (auth && auth.toLowerCase().startsWith('bearer ')) {
+
+      const user = await getVerifiedUser(auth.slice(7))
+      return { user }
+    }
+  }
 })
 
 if (process.env.NODE_ENV !== 'test') {

@@ -11,8 +11,8 @@ const NewBook = ({ addBook }) => {
     e.preventDefault()
 
     const y = parseInt(published)
-    addBook({
-      variables: { title, author, y, genres }
+    await addBook({
+      variables: { title: title, author: author, published: y, genres: genres }
     }).then(res => {
 
       setTitle('')
@@ -21,7 +21,6 @@ const NewBook = ({ addBook }) => {
       setGenres([])
       setGenre('')
     })
-    // TODO error handling (alerts)
   }
 
   const addGenre = () => {
