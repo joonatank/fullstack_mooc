@@ -115,19 +115,33 @@ const resolvers = {
           : Books.find({}).populate('author')
       }
     },
-    allAuthors: () => Authors.find({}).populate('books'),
-    bookCount: () => Books.countDocuments(),
+    allAuthors: (root, args) => {
+      // Testing N+1 problem [allAuthors, bookCount]
+      console.log('EXPENSIVE')
+      return Authors.find({}).populate('books')
+    },
+    bookCount: () => {
+      console.log('bookcount')
+      return Books.countDocuments()
+    },
     authorCount: () => Authors.countDocuments(),
     me: (root, args, context) => context.user
   },
   Author: {
-    bookCount: (root) => (
-      Authors.findOne({ name: root.name })
-        .select('books')
-        .then(author => {
-          return author.books.length
-        })
-    )
+    bookCount: (root, args) => {
+      if (root.books) {
+        return root.books.length
+      }
+      else {
+        // Testing N+1 problem [allAuthors, bookCount]
+        // This pathing is significantly slower with just 30 authors
+        console.log('EXPENSIVE')
+        return Authors
+          .findOne({ name: root.name })
+          .select('books')
+          .then(author => author.books.length)
+      }
+    }
   },
 
   Mutation: {
