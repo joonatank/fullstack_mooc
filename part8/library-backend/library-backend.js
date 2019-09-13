@@ -5,7 +5,7 @@
  *  Exercise 8.1 - 8.15
  */
 require('dotenv').config()
-const { ApolloServer, UserInputError, gql } = require('apollo-server')
+const { ApolloServer, UserInputError, gql, PubSub } = require('apollo-server')
 const mongoose = require('mongoose')
 const uuid = require('uuid/v1')
 const jwt = require('jsonwebtoken')
@@ -90,7 +90,13 @@ const typeDefs = gql`
       password: String!
     ): Token
   }
+
+  type Subscription {
+    bookAdded: Book!
+  }
 `
+
+const pubsub = new PubSub()
 
 const resolvers = {
   Query: {
@@ -131,6 +137,8 @@ const resolvers = {
     //    but the book already exists. Since book names are unique can't add
     //    another book with same title but different author.
     //    So there is left an author with no books.
+    //
+    // TODO cleanup by doing proper promise chaining
     addBook: async (root, args) => {
       try {
         const user = await getVerifiedUser(args.token)
@@ -146,21 +154,24 @@ const resolvers = {
 
         const book = new Books({ ...args, author: author })
         author.books = [ ...author.books, book._id ]
-        return author.save().then(() => book.save() )
 
-      }).catch(error => {
-        console.error('Error thrown: ', error)
-        let msg = ''
+        return author.save().then( () => book.save() )
+        }).then( book => {
+          pubsub.publish('BOOK_ADDED', { bookAdded: book })
+          return book
+        }).catch(error => {
+          console.error('Error thrown: ', error)
+          let msg = ''
 
-        if (error.name === 'MongoError' && error.code === 11000) {
-          // TODO add which object (book or an author)
-          msg = 'Already exists : ' + error.message
-        }
-        else if (error.name === 'ValidationError') {
-          msg = error.name + error.message
-        }
+          if (error.name === 'MongoError' && error.code === 11000) {
+            // TODO add which object (book or an author)
+            msg = 'Already exists : ' + error.message
+          }
+          else if (error.name === 'ValidationError') {
+            msg = error.name + error.message
+          }
 
-        throw new UserInputError(msg, { invalidArgs: args })
+          throw new UserInputError(msg, { invalidArgs: args })
       })
     },
 
@@ -210,7 +221,12 @@ const resolvers = {
         })
       })
     }
+  }, // Mutations
 
+  Subscription: {
+    bookAdded: {
+      subscribe: () => pubsub.asyncIterator(['BOOK_ADDED'])
+    } // Subscriptions
   }
 }
 
@@ -228,8 +244,9 @@ const server = new ApolloServer({
 })
 
 if (process.env.NODE_ENV !== 'test') {
-  server.listen().then(({ url }) => {
+  server.listen().then(({ url, subscriptionsUrl }) => {
     console.log(`Server ready at ${url}`)
+    console.log(`Subscriptions ready at ${subscriptionsUrl}`)
   })
 }
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Query, Mutation } from 'react-apollo'
 import { gql } from 'apollo-boost'
+import { useSubscription } from '@apollo/react-hooks'
 
 import Authors from './components/Authors'
 import EditAuthor from './components/EditAuthor'
@@ -110,6 +111,25 @@ mutation($username: String!, $password: String!) {
 }
 `
 
+const BOOK_DETAILS = gql`
+fragment BookDetails on Book {
+  id
+  title
+  author {
+    name
+  }
+}
+`
+
+const BOOK_ADDED = gql`
+subscription {
+  bookAdded {
+    ...BookDetails
+  }
+}
+${BOOK_DETAILS}
+`
+
 const App = () => {
   const [page, setPage] = useState('authors')
   const [token, setToken] = useState(null)
@@ -118,6 +138,17 @@ const App = () => {
   useEffect(() => {
       setToken(localStorage.getItem('library-user-token'))
   }, [])
+
+  useSubscription(BOOK_ADDED, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      console.log(subscriptionData)
+      if (subscriptionData.data.bookAdded) {
+        const addedBook = subscriptionData.data.bookAdded
+        alert(`${addedBook.title} added`)
+      }
+      // TODO add update cache
+    }
+  })
 
   const logout = () => {
     localStorage.setItem('library-user-token', '')
