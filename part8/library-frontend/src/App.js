@@ -33,18 +33,25 @@ import LoginForm from './components/LoginForm'
 // Move queries to separate file
 // Add redirect from add book to the books page
 // Add redirect from login to authors page
-
-const ALL_BOOKS = gql`
-query ($genre: String) {
-  allBooks(genre: $genre) {
+const BOOK_DETAILS = gql`
+  fragment BookDetails on Book {
     id
     title
     genres
+    published
     author {
       name
     }
-  }
 }
+`
+
+const FILTER_BOOKS = gql`
+  query ($genre: String) {
+    allBooks(genre: $genre) {
+    ...BookDetails
+    }
+  }
+  ${BOOK_DETAILS}
 `
 const ALL_AUTHORS = gql`
 {
@@ -78,14 +85,10 @@ const CREATE_BOOK = gql`
       published: $published,
       genres: $genres
     ) {
-    id
-    title
-    genres
-    author {
-      name
-    }
+      ...BookDetails
+      }
   }
-}
+  ${BOOK_DETAILS}
 `
 const EDIT_AUTHOR = gql`
 mutation editAuthor($name: String!, $born: Int!) {
@@ -115,14 +118,10 @@ mutation($username: String!, $password: String!) {
 const BOOK_ADDED = gql`
 subscription {
   bookAdded {
-    id
-    title
-    genres
-    author {
-      name
-    }
+  ...BookDetails
   }
 }
+${BOOK_DETAILS}
 `
 
 const App = () => {
@@ -132,36 +131,38 @@ const App = () => {
 
   const client = useApolloClient()
 
-  const books = useQuery(ALL_BOOKS)
-  const authors = useQuery(ALL_AUTHORS)
-
   const handleError = (error) => {
     console.error(error)
     error.graphQLErrors.map(err => console.error(err.message))
   }
 
+  const booksFiltered = useQuery(FILTER_BOOKS, { variables: { genre: genreFilter } })
+  const authors = useQuery(ALL_AUTHORS, { onError: handleError })
+  const user = useQuery(ME, { onError: handleError })
+
   const [addBook] = useMutation(CREATE_BOOK, {
     onError: handleError,
-    update: (store, response) => {
-      console.log('mutation resp: ', response)
-      updateCacheWith(response.data.addBook)
-    }
+    update: (store, response) => { }
   })
 
   const updateCacheWith = (book) => {
-    console.log('updateCacheWith: ', book)
     const includedIn = (set, object) =>
       set.map(p => p.id).includes(object.id)
 
-    const dataInStore = client.readQuery({ query: ALL_BOOKS })
-    console.log('datainstore: ', dataInStore)
-    if (!includedIn(dataInStore.allBooks, book)) {
-      dataInStore.allBooks.push(book)
-      client.writeQuery({
-        query: ALL_BOOKS,
-        data: dataInStore
-      })
-    }
+    // Need to iterate genres because every one of them has a separate cache
+    const genres = [...book.genres, '']
+    genres.map(genre => {
+      const q = { query: FILTER_BOOKS, variables: { genre: genre } }
+      const dataInStore = client.readQuery(q)
+      // TODO check if that data is in the cache or not (don't add if not)
+      if (!includedIn(dataInStore.allBooks, book)) {
+        dataInStore.allBooks.push(book)
+        client.writeQuery({
+          query: FILTER_BOOKS,
+          data: dataInStore
+        })
+      }
+    })
   }
 
   useEffect(() => {
@@ -170,7 +171,6 @@ const App = () => {
 
   useSubscription(BOOK_ADDED, {
     onSubscriptionData: ({ subscriptionData }) => {
-      console.log(subscriptionData)
       const addedBook = subscriptionData.data.bookAdded
       alert(`${addedBook.title} added`)
       updateCacheWith(addedBook)
@@ -196,9 +196,7 @@ const App = () => {
         {token &&
             <span>
               <button onClick={() => setPage('add')}>add book</button>
-              <Query query={ME} >
-                { (result) => <NameBar result={result} /> }
-              </Query>
+              <NameBar result={user} />
               <button onClick={() => setPage('recom')}>recomendations</button>
               <button onClick={() => logout()}>logout</button>
             </span>
@@ -213,29 +211,22 @@ const App = () => {
 
       {page === 'authors' &&
         <div>
-          <Query query={ALL_AUTHORS}>
-            { (result) => (
-              <div>
-                <Authors result={authors} />
-                <Mutation mutation={EDIT_AUTHOR}
-                      refetchQueries={[{ query: ALL_AUTHORS }]}
-                    >
-                { (editAuthor) => <EditAuthor result={authors} editAuthor={editAuthor} /> }
-                </Mutation>
-              </div>
-              )
-            }
-          </Query>
+            <Authors result={authors} />
+            <Mutation mutation={EDIT_AUTHOR}
+                  refetchQueries={[{ query: ALL_AUTHORS }]}
+                >
+            { (editAuthor) => <EditAuthor result={authors} editAuthor={editAuthor} /> }
+            </Mutation>
         </div>
       }
 
-      {page === 'books' && <Books result={books} setFilter={setGenreFilter} /> }
+      {page === 'books' && <Books result={booksFiltered} setFilter={setGenreFilter} /> }
 
       {page === 'recom' &&
         <Query query={ME} >
           { (me) =>
-            <Query query={ALL_BOOKS} variables={{ genre: me.data.me.favoriteGenre }} >
-            { (books) => <Recom result={books} user={me} /> }
+            <Query query={FILTER_BOOKS} variables={{ genre: me.data.me.favoriteGenre }} >
+            { (books) => <Recom result={books} user={user} /> }
             </Query>
           }
         </Query>

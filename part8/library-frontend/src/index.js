@@ -11,6 +11,7 @@ import { setContext } from 'apollo-link-context'
 import { split } from 'apollo-link'
 import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
+import { onError } from 'apollo-link-error'
 
 const wsLink = new WebSocketLink({
   uri: 'ws://localhost:4000/graphql',
@@ -40,8 +41,18 @@ const link = split(
   authLink.concat(httpLink)
 )
 
+const errLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors)
+    graphQLErrors.map(({ message, locations, path }) =>
+      console.error(`[CRAPQL error]: ${message} at ${locations}`)
+    )
+  if (networkError) {
+    console.error(`[Network error]: ${networkError}`)
+  }
+})
+
 const client = new ApolloClient({
-  link: link,
+  link: errLink.concat(link),
   cache: new InMemoryCache()
 })
 
