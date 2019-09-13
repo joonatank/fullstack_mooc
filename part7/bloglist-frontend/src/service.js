@@ -33,8 +33,8 @@ const blogs = () => {
 }
 
 const post_blog = (user, blog) => {
-    if (!user) { throw 'incorrect user' }
-    if (!blog) { throw 'can\'t post empty blog' }
+    if (!user) { throw Error('incorrect user') }
+    if (!blog) { throw Error('can\'t post empty blog') }
 
     const config = {
         headers: { Authorization: 'bearer '.concat(user.token) }
@@ -46,8 +46,8 @@ const post_blog = (user, blog) => {
 }
 
 const put_blog = (user, blog, params) => {
-    if (!user) { throw 'incorrect user' }
-    if (!blog) { throw 'can\'t post empty blog' }
+    if (!user) { throw Error('incorrect user') }
+    if (!blog) { throw Error('can\'t post empty blog') }
 
     const config = {
         headers: { Authorization: 'bearer '.concat(user.token) }
@@ -72,8 +72,8 @@ const post_comment = (user, blog, comment) => {
 }
 
 const del_blog = (user, blog) => {
-    if (!user) { throw 'incorrect user' }
-    if (!blog) { throw 'can\'t post empty blog' }
+    if (!user) { throw Error('incorrect user') }
+    if (!blog) { throw Error('can\'t post empty blog') }
 
     const config = {
         headers: { Authorization: 'bearer '.concat(user.token) }
