@@ -1,0 +1,60 @@
+-- code
+-- to generate pictures with https://www.websequencediagrams.com/
+
+
+-- ex 0.4
+title 0.4 Saving new note
+
+browser->server: HTTP POST https://fullstack-exampleapp.herokuapp.com/notes
+server-->browser: 302 Redirect /notes
+browser->server: HTTP GET https://fullstack-exampleapp.herokuapp.com/notes
+
+note over browser:
+Browser continues the HTTP GET
+sequence as described before
+end note
+
+
+-- ex 0.5
+title 0.5 Single Page App
+
+browser->server: HTTP GET  https://fullstack-exampleapp.herokuapp.com/spa
+server-->browser: 200 : with html body
+browser->server: HTTP GET https://fullstack-exampleapp.herokuapp.com/main.css
+server-->browser: 200 : with css body
+browser->server: HTTP GET https://fullstack-exampleapp.herokuapp.com/spa.js
+server-->browser: 200 : with js body
+
+note over browser:
+Browser executes javascript
+end note
+
+browser->server: HTTP GET https://fullstack-exampleapp.herokuapp.com/data.json
+server-->browser: 200 : with json body
+
+note over browser:
+Browser shows all notes defined in json
+end note
+
+
+-- ex 0.6
+title 0.6 Single Page App adding note
+
+note over browser:
+Browser user inputs text
+Browser user submits
+end note
+
+note over browser:
+Browser renders the new note
+end note
+
+browser->server: HTTP POST https://fullstack-exampleapp.herokuapp.com/new_notes
+server-->browser: 201: with json body
+
+note over browser:
+End of trasnactions
+end note
+
+-- code ends
+
