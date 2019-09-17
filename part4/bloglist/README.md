@@ -1,7 +1,7 @@
 # Blog listing
 NodeJS Backend that allows users to link blog articles.
 
-Part 4 of Helsinki Fullstack MOOC [add link]
+[Part 4 of Helsinki Fullstack MOOC](https://fullstackopen.com/en/part4)
 
 ## Cool stuff here
 - Token authentication
@@ -9,7 +9,7 @@ Part 4 of Helsinki Fullstack MOOC [add link]
 - Combining (populating) Mongo documents
 
 ## Usage
-TODO add Heroku address for the test app (both front-and-backend)
+Combined front and backend can be found at: [Heroku](https://gentle-ravine-09411.herokuapp.com/)
 
 ``` bash
 # GET blogs : doesn't require login
@@ -39,12 +39,10 @@ http POST http://localhost:3003/api/login username={name} password={password}
 http POST http://localhost:3003/api/users username={name} password={password} name={fullname}
 ```
 
-TODO document the data structures (JSONs)
-
 ### Installation
 Requires MongoDB
 
-requires following to be defined in .env
+Requires following to be defined in .env
 ```
 # Databse url used for all requests
 MONGODB_URL
@@ -59,11 +57,3 @@ DEV_DATABASE
 # Random string for encryption
 SECRET
 ```
-
-### Heroku
-TODO add this
-
-## TODO
-- No user deletion
-- No batch deletion for blogs
-  http DELETE http://localhost:3003/api/blogs with a message body containing all the ids to delete
