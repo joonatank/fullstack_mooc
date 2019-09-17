@@ -70,7 +70,7 @@ const NewPerson = ({name, number, handleNameChangeCb, handleNumberChangeCb, addP
 }
 
 const App = () => {
-    const [ persons, setPerson ] = useState([])
+    const [ persons, setPersons ] = useState([])
     const [ newName, setNewName ] = useState('')
     const [ newNumber, setNewNumber ] = useState('')
     const [ filter, setFilter ] = useState('')
@@ -82,7 +82,7 @@ const App = () => {
         Server.getAll()
             .then(resp => {
                 const people = resp.data
-                setPerson(people)
+                setPersons(people)
             })
     }, [newName])   // not perfect but avoids sending new requests at every render
 
@@ -98,13 +98,16 @@ const App = () => {
         let msg = ''
         if (found.length !== 0) {
             const id = found[0]._id
-            promise = Server.update(id, person)
-            msg = 'Changed'
+            if (window.confirm(`Change ${person.name} number instead?`)) {
+                promise = Server.update(id, person)
+                msg = 'Changed'
+            }
         }
         else {
             promise = Server.create(person)
             msg = 'Added'
         }
+
         promise.then(resp => {
             setNewName('')
             setNewNumber('')
@@ -137,6 +140,7 @@ const App = () => {
         console.log(`deleting ${id}`)
         if (window.confirm(`Delete ${p.name}?`)) {
             Server.del(id)
+            setPersons(persons.filter( p => p._id !== id ))
         }
     }
 
